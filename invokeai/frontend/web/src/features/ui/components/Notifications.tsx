@@ -17,7 +17,7 @@ import { $didStudioInit } from 'app/hooks/useStudioInitAction';
 import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
 import { selectConfigSlice } from 'features/system/store/configSlice';
 import { shouldShowNotificationChanged } from 'features/ui/store/uiSlice';
-import InvokeSymbol from 'public/assets/images/invoke-favicon.png';
+import InvokeSymbol from 'public/assets/images/pinksea-favicon.png';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PiLightbulbFilamentBold } from 'react-icons/pi';

@@ -1,7 +1,7 @@
 import { Image, Text, Tooltip } from '@invoke-ai/ui-library';
 import { useStore } from '@nanostores/react';
 import { $logo } from 'app/store/nanostores/logo';
-import InvokeLogoYellow from 'public/assets/images/invoke-symbol-ylw-lrg.svg';
+import InvokeLogoYellow from 'public/assets/images/pinksea-favicon.png';
 import { memo, useMemo, useRef } from 'react';
 import { useGetAppVersionQuery } from 'services/api/endpoints/appInfo';
 

@@ -6,7 +6,7 @@ import { ShareWorkflowButton } from 'features/nodes/components/sidePanel/workflo
 import { selectWorkflowId } from 'features/nodes/store/selectors';
 import { workflowModeChanged } from 'features/nodes/store/workflowLibrarySlice';
 import { useLoadWorkflowWithDialog } from 'features/workflowLibrary/components/LoadWorkflowConfirmationAlertDialog';
-import InvokeLogo from 'public/assets/images/invoke-symbol-wht-lrg.svg';
+import InvokeLogo from 'public/assets/images/pinksea-favicon.png';
 import { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PiImage, PiUsersBold } from 'react-icons/pi';

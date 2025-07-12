@@ -21,6 +21,21 @@ function ThemeLocaleProvider({ children }: ThemeLocaleProviderProps) {
     return extendTheme({
       ..._theme,
       direction,
+      colors: {
+        ..._theme.colors,
+        invokeYellow: {
+          50:  '#ff719f',
+          100: '#ff6f9d',
+          200: '#ff6c97',
+          300: '#ff6892',
+          400: '#ff648c',
+          500: '#f56087',
+          600: '#f05e84',
+          700: '#eb5c82',
+          800: '#e65a7f',
+          900: '#e1587c',
+        },
+      },
       shadows: {
         ..._theme.shadows,
         selected:

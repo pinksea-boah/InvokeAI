@@ -5,7 +5,7 @@ import { useClipboard } from 'common/hooks/useClipboard';
 import { selectConfigSlice } from 'features/system/store/configSlice';
 import { toast } from 'features/toast/toast';
 import newGithubIssueUrl from 'new-github-issue-url';
-import InvokeLogoYellow from 'public/assets/images/invoke-symbol-ylw-lrg.svg';
+import InvokeLogoYellow from 'public/assets/images/pinksea-favicon.png';
 import { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PiArrowCounterClockwiseBold, PiArrowSquareOutBold, PiCopyBold } from 'react-icons/pi';
