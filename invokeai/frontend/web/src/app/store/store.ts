@@ -34,6 +34,8 @@ import { rememberEnhancer, rememberReducer } from 'redux-remember';
 import undoable from 'redux-undo';
 import { serializeError } from 'serialize-error';
 import { api } from 'services/api';
+import { userApi } from 'services/api/custom/userApi';
+import { sessionApi } from 'services/api/custom/sessionApi';
 import { authToastMiddleware } from 'services/api/authToastMiddleware';
 import type { JsonObject } from 'type-fest';
 
@@ -47,6 +49,8 @@ const log = logger('system');
 
 const allReducers = {
   [api.reducerPath]: api.reducer,
+  [userApi.reducerPath]: userApi.reducer,
+  [sessionApi.reducerPath]: sessionApi.reducer,
   [gallerySlice.name]: gallerySlice.reducer,
   [nodesSlice.name]: undoable(nodesSlice.reducer, nodesUndoableConfig),
   [systemSlice.name]: systemSlice.reducer,
@@ -171,6 +175,8 @@ export const createStore = (uniqueStoreKey?: string, persist = true) =>
         immutableCheck: import.meta.env.MODE === 'development',
       })
         .concat(api.middleware)
+        .concat(userApi.middleware)
+        .concat(sessionApi.middleware)
         .concat(dynamicMiddlewares)
         .concat(authToastMiddleware)
         // .concat(getDebugLoggerMiddleware())
