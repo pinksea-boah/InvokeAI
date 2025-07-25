@@ -22,6 +22,7 @@ import { QueueTabAutoLayout } from 'features/ui/layouts/queue-tab-auto-layout';
 import { UpscalingTabAutoLayout } from 'features/ui/layouts/upscaling-tab-auto-layout';
 import { WorkflowsTabAutoLayout } from 'features/ui/layouts/workflows-tab-auto-layout';
 import { selectActiveTab } from 'features/ui/store/uiSelectors';
+import { OAuthCallback } from 'features/system/components/OAuthCallback';
 import { memo } from 'react';
 
 export const AppContent = memo(() => {
@@ -29,6 +30,7 @@ export const AppContent = memo(() => {
     <Flex position="relative" flexDir="column" w="full" h="full" overflow="hidden">
       <VerticalNavBar />
       <TabContent />
+      <OAuthCallback />
     </Flex>
   );
 });

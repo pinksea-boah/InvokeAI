@@ -38,6 +38,7 @@ import { userApi } from 'services/api/custom/userApi';
 import { sessionApi } from 'services/api/custom/sessionApi';
 import { authToastMiddleware } from 'services/api/authToastMiddleware';
 import type { JsonObject } from 'type-fest';
+import { userSlice } from './userSlice';
 
 import { STORAGE_PREFIX } from './constants';
 import { actionSanitizer } from './middleware/devtools/actionSanitizer';
@@ -51,6 +52,7 @@ const allReducers = {
   [api.reducerPath]: api.reducer,
   [userApi.reducerPath]: userApi.reducer,
   [sessionApi.reducerPath]: sessionApi.reducer,
+  [userSlice.name]: userSlice.reducer,
   [gallerySlice.name]: gallerySlice.reducer,
   [nodesSlice.name]: undoable(nodesSlice.reducer, nodesUndoableConfig),
   [systemSlice.name]: systemSlice.reducer,

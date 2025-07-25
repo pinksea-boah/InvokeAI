@@ -6,6 +6,7 @@ import InvokeAILogoComponent from 'features/system/components/InvokeAILogoCompon
 import SettingsMenu from 'features/system/components/SettingsModal/SettingsMenu';
 import StatusIndicator from 'features/system/components/StatusIndicator';
 import { VideosModalButton } from 'features/system/components/VideosModal/VideosModalButton';
+import { LoginModal } from 'features/system/components/LoginModal';
 import {
   selectWithCanvasTab,
   selectWithGenerateTab,
@@ -64,6 +65,7 @@ export const VerticalNavBar = memo(() => {
       <StatusIndicator />
       <Notifications />
       <VideosModalButton />
+      <LoginModal />
       {customNavComponent ? customNavComponent : <SettingsMenu />}
     </Flex>
   );
