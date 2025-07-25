@@ -5,6 +5,7 @@ import { Flex } from '@invoke-ai/ui-library';
 import { useStore } from '@nanostores/react';
 import { useAppSelector } from 'app/store/storeHooks';
 import Loading from 'common/components/Loading/Loading';
+import { OAuthCallback } from 'features/system/components/OAuthCallback';
 import {
   selectWithCanvasTab,
   selectWithGenerateTab,
@@ -22,7 +23,6 @@ import { QueueTabAutoLayout } from 'features/ui/layouts/queue-tab-auto-layout';
 import { UpscalingTabAutoLayout } from 'features/ui/layouts/upscaling-tab-auto-layout';
 import { WorkflowsTabAutoLayout } from 'features/ui/layouts/workflows-tab-auto-layout';
 import { selectActiveTab } from 'features/ui/store/uiSelectors';
-import { OAuthCallback } from 'features/system/components/OAuthCallback';
 import { memo } from 'react';
 
 export const AppContent = memo(() => {

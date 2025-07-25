@@ -3,10 +3,14 @@ export type UserTier = 'free' | 'pro' | 'enterprise';
 
 // 사용자 프로필 정보 (Google OAuth 응답 기반)
 export interface UserProfile {
+  // Google OAuth 필드들
   locale?: string | null;
   picture?: string; // Google 프로필 이미지 URL
   given_name?: string; // 이름
   family_name?: string; // 성
+  display_name?: string;
+
+  // 기존 커스텀 필드들 (선택적)
   avatar?: string;
   bio?: string;
   preferences?: {
@@ -24,9 +28,10 @@ export interface UserProfile {
 export interface User {
   id: string;
   email: string;
-  display_name: string;
+  display_name?: string;
   profile?: UserProfile;
   permissions: string[];
+  // 선택적 필드들 (기존 호환성 유지)
   oauth_provider?: string; // 'email', 'google', 'discord'
   email_verified?: boolean; // 이메일 인증 상태
   user_tier?: UserTier; // 'free', 'pro', 'enterprise'

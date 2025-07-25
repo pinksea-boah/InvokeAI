@@ -1,5 +1,3 @@
-import { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   Button,
   Flex,
@@ -12,9 +10,10 @@ import {
   Text,
   useDisclosure,
 } from '@invoke-ai/ui-library';
-import { useAppSelector } from 'app/store/storeHooks';
-import { $authToken } from 'app/store/nanostores/authToken';
 import { useStore } from '@nanostores/react';
+import { $authToken } from 'app/store/nanostores/authToken';
+import { useAppSelector } from 'app/store/storeHooks';
+import { useCallback } from 'react';
 
 // OAuth 엔드포인트 상수
 const OAUTH_ENDPOINTS = {
@@ -22,7 +21,6 @@ const OAUTH_ENDPOINTS = {
 } as const;
 
 export const LoginModal = () => {
-  const { t } = useTranslation();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const authToken = useStore($authToken);
   const user = useAppSelector((state) => state.user?.user ?? null);
@@ -32,8 +30,8 @@ export const LoginModal = () => {
   // OAuth 로그인 - 새 창으로 리다이렉트
   const loginWithGoogle = useCallback(() => {
     const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
-    const redirectUrl = encodeURIComponent(window.location.origin);
-    const oauthUrl = `${apiBaseUrl}${OAUTH_ENDPOINTS.GOOGLE}?redirect_uri=${redirectUrl}`;
+    // const redirectUrl = encodeURIComponent(window.location.origin);
+    const oauthUrl = `${apiBaseUrl}${OAUTH_ENDPOINTS.GOOGLE}`;
 
     window.location.href = oauthUrl;
   }, []);
@@ -75,7 +73,7 @@ export const LoginModal = () => {
         bg="whiteAlpha.200"
         backdropFilter="blur(8px)"
       >
-        {isAuthenticated ? 'Log out' : 'Log in'}
+        {isAuthenticated ? user?.display_name || user?.email?.split('@')[0] || 'Log out' : 'Log in'}
       </Button>
 
       {/* 로그인 모달 */}

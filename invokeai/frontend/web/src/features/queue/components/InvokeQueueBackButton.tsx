@@ -8,7 +8,7 @@ import { PiLightningFill, PiSparkleFill } from 'react-icons/pi';
 
 import { InvokeButtonTooltip } from './InvokeButtonTooltip/InvokeButtonTooltip';
 
-const invoke = 'Invoke';
+const invoke = 'Generate';
 
 export const InvokeButton = memo(() => {
   const queue = useInvoke();

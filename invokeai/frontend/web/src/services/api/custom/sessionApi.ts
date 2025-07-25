@@ -1,7 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { $authToken } from 'app/store/nanostores/authToken';
 import { $apiServerUrl } from 'app/store/nanostores/apiServerUrl';
-import type { RefreshTokenResponse, LogoutResponse } from './sessionSchema';
+import { $authToken } from 'app/store/nanostores/authToken';
+
+import type { LogoutResponse, RefreshTokenResponse } from './sessionSchema';
 
 /**
  * 세션 API - 토큰 및 세션 관리

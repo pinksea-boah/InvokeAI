@@ -1,7 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { $authToken } from 'app/store/nanostores/authToken';
 import { $apiServerUrl } from 'app/store/nanostores/apiServerUrl';
-import type { AuthResponse, UserInfoResponse, LoginRequest, RegisterRequest, ErrorResponse } from './userSchema';
+import { $authToken } from 'app/store/nanostores/authToken';
+
+import type { AuthResponse, LoginRequest, UserInfoResponse } from './userSchema';
 
 /**
  * 사용자 API - 인증 및 사용자 관리
@@ -35,7 +36,7 @@ export const userApi = createApi({
      */
     login: builder.mutation<AuthResponse, LoginRequest>({
       query: (credentials) => ({
-        url: '/api/auth/login',
+        url: '/oauth/google/login',
         method: 'POST',
         body: credentials,
       }),
@@ -47,7 +48,7 @@ export const userApi = createApi({
      */
     logout: builder.mutation<{ status: string }, void>({
       query: () => ({
-        url: '/api/auth/logout',
+        url: '/session/logout',
         method: 'POST',
       }),
       invalidatesTags: ['Auth', 'User'],

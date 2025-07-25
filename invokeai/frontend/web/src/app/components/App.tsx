@@ -3,21 +3,21 @@ import { useStore } from '@nanostores/react';
 import { GlobalHookIsolator } from 'app/components/GlobalHookIsolator';
 import { GlobalModalIsolator } from 'app/components/GlobalModalIsolator';
 import { $didStudioInit, type StudioInitAction } from 'app/hooks/useStudioInitAction';
+import { $authToken } from 'app/store/nanostores/authToken';
+import { useAppDispatch } from 'app/store/storeHooks';
+import { setUser, setUserError } from 'app/store/userSlice';
 import type { PartialAppConfig } from 'app/types/invokeai';
+import type { User } from 'app/types/user';
 import Loading from 'common/components/Loading/Loading';
 import { useClearStorage } from 'common/hooks/useClearStorage';
 import { AppContent } from 'features/ui/components/AppContent';
-import React, { memo, useCallback, useEffect } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { useRefreshTokenMutation } from 'services/api/custom/sessionApi';
+import { useGetUserInfoQuery } from 'services/api/custom/userApi';
 
 import AppErrorBoundaryFallback from './AppErrorBoundaryFallback';
 import ThemeLocaleProvider from './ThemeLocaleProvider';
-import { useAppDispatch } from 'app/store/storeHooks';
-import { setUser, setUserError } from 'app/store/userSlice';
-import { $authToken } from 'app/store/nanostores/authToken';
-import { useGetUserInfoQuery } from 'services/api/custom/userApi';
-import { useRefreshTokenMutation } from 'services/api/custom/sessionApi';
-import type { User } from 'app/types/user';
 const DEFAULT_CONFIG = {};
 
 interface Props {
@@ -71,7 +71,7 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
       const user: User = {
         id: userInfo.id,
         email: userInfo.email,
-        display_name: userInfo.display_name,
+        display_name: userInfo.display_name || undefined,
         profile: userInfo.profile,
         permissions: userInfo.permissions,
         oauth_provider: userInfo.oauth_provider,

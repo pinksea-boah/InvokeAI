@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { Box, Spinner, Text, VStack } from '@invoke-ai/ui-library';
 import { $authToken } from 'app/store/nanostores/authToken';
 import { useAppDispatch } from 'app/store/storeHooks';
 import { setUser } from 'app/store/userSlice';
+import { useEffect } from 'react';
 import { useGetUserInfoQuery } from 'services/api/custom/userApi';
-import { Box, Spinner, Text, VStack } from '@invoke-ai/ui-library';
 
 export const OAuthCallback = () => {
   const dispatch = useAppDispatch();
@@ -11,7 +11,6 @@ export const OAuthCallback = () => {
   // URL에서 토큰 추출
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
-  const error = urlParams.get('error');
 
   // 토큰이 있으면 저장
   useEffect(() => {
@@ -26,27 +25,34 @@ export const OAuthCallback = () => {
   }, [token]);
 
   // 사용자 정보 조회 (토큰이 있을 때만)
-  const {
-    data: userInfo,
-    error: userInfoError,
-    isLoading,
-  } = useGetUserInfoQuery(undefined, {
+  const { data: userInfo, isLoading } = useGetUserInfoQuery(undefined, {
     skip: !token,
   });
 
   // 사용자 정보를 Redux에 저장
   useEffect(() => {
     if (userInfo) {
-      dispatch(setUser(userInfo));
+      // UserInfoResponse를 User 타입으로 변환
+      const user = {
+        id: userInfo.id,
+        email: userInfo.email,
+        display_name: userInfo.display_name || undefined,
+        profile: userInfo.profile,
+        permissions: userInfo.permissions,
+        oauth_provider: userInfo.oauth_provider,
+        email_verified: userInfo.email_verified,
+        user_tier: userInfo.user_tier,
+        user_type: userInfo.user_type,
+        is_active: userInfo.is_active,
+        total_workflows: userInfo.total_workflows,
+        total_generations: userInfo.total_generations,
+        timezone: userInfo.timezone,
+        created_at: userInfo.created_at,
+        updated_at: userInfo.updated_at,
+      };
+      dispatch(setUser(user));
     }
   }, [userInfo, dispatch]);
-
-  // 에러 처리
-  useEffect(() => {
-    if (error || userInfoError) {
-      console.error('OAuth 로그인 에러:', error || userInfoError);
-    }
-  }, [error, userInfoError]);
 
   if (isLoading) {
     return (

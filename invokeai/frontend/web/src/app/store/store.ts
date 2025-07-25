@@ -34,17 +34,17 @@ import { rememberEnhancer, rememberReducer } from 'redux-remember';
 import undoable from 'redux-undo';
 import { serializeError } from 'serialize-error';
 import { api } from 'services/api';
-import { userApi } from 'services/api/custom/userApi';
-import { sessionApi } from 'services/api/custom/sessionApi';
 import { authToastMiddleware } from 'services/api/authToastMiddleware';
+import { sessionApi } from 'services/api/custom/sessionApi';
+import { userApi } from 'services/api/custom/userApi';
 import type { JsonObject } from 'type-fest';
-import { userSlice } from './userSlice';
 
 import { STORAGE_PREFIX } from './constants';
 import { actionSanitizer } from './middleware/devtools/actionSanitizer';
 import { actionsDenylist } from './middleware/devtools/actionsDenylist';
 import { stateSanitizer } from './middleware/devtools/stateSanitizer';
 import { listenerMiddleware } from './middleware/listenerMiddleware';
+import { userSlice } from './userSlice';
 
 const log = logger('system');
 
