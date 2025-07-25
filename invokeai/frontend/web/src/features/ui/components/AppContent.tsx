@@ -26,7 +26,7 @@ import { memo } from 'react';
 
 export const AppContent = memo(() => {
   return (
-    <Flex position="relative" w="full" h="full" overflow="hidden">
+    <Flex position="relative" flexDir="column" w="full" h="full" overflow="hidden">
       <VerticalNavBar />
       <TabContent />
     </Flex>

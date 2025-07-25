@@ -46,6 +46,11 @@ const SettingsMenu = () => {
         aria-label={t('accessibility.menu')}
         icon={<PiGearSixFill fontSize={20} />}
         boxSize={8}
+        color="base.50"
+        _hover={{
+          bg: 'base.200',
+          color: 'base.50',
+        }}
       />
       <Portal>
         <MenuList>

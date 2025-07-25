@@ -9,8 +9,13 @@ import type { ReactElement } from 'react';
 import { memo, useCallback, useRef } from 'react';
 
 const sx: SystemStyleObject = {
+  color: 'base.50',
+  _hover: {
+    bg: 'base.200',
+    color: 'base.50',
+  },
   '&[data-selected=true]': {
-    svg: { fill: 'invokeYellow.300' },
+    svg: { fill: 'invokeYellow.500' },
   },
 };
 

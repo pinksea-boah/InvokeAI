@@ -39,9 +39,20 @@ export const VerticalNavBar = memo(() => {
   const withQueueTab = useAppSelector(selectWithQueueTab);
 
   return (
-    <Flex flexDir="column" alignItems="center" py={6} ps={4} pe={2} gap={4} minW={0} flexShrink={0}>
+    <Flex
+      flexDir="row"
+      alignItems="center"
+      justifyContent="space-between"
+      py={6}
+      ps={4}
+      pe={2}
+      gap={4}
+      minW={0}
+      flexShrink={0}
+      className="af-vertical-nav-bar"
+    >
       <InvokeAILogoComponent />
-      <Flex gap={6} pt={6} h="full" flexDir="column">
+      <Flex gap={6} h="full" flexDir="row">
         {withGenerateTab && <TabButton tab="generate" icon={<PiTextAaBold />} label="Generate" />}
         {withCanvasTab && <TabButton tab="canvas" icon={<PiBoundingBoxBold />} label={t('ui.tabs.canvas')} />}
         {withUpscalingTab && <TabButton tab="upscaling" icon={<PiFrameCornersBold />} label={t('ui.tabs.upscaling')} />}

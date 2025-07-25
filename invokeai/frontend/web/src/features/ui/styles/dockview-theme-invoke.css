@@ -66,3 +66,14 @@
   /* this is the tab divider */
   background-color: var(--dv-inactivegroup-tab-divider-color);
 }
+
+/* Artifex Overrides */
+
+.af-vertical-nav-bar {
+  background-color: var(--invoke-colors-base-50);
+}
+
+.dockview-theme-invoke {
+  --dv-separator-border: var(--invoke-colors-base-600);
+  --dv-group-view-background-color: var(--invoke-colors-base-700);
+}

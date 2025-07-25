@@ -51,6 +51,11 @@ export const Notifications = () => {
             variant="link"
             icon={<PiLightbulbFilamentBold fontSize={20} />}
             boxSize={8}
+            color="base.50"
+            _hover={{
+              bg: 'base.200',
+              color: 'base.50',
+            }}
           />
         </Flex>
       </PopoverTrigger>

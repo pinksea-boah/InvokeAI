@@ -24,6 +24,11 @@ export const VideosModalButton = memo(() => {
       icon={<PiYoutubeLogoFill fontSize={20} />}
       boxSize={8}
       onClick={onClickOpen}
+      color="base.50"
+      _hover={{
+        bg: 'base.200',
+        color: 'base.50',
+      }}
     />
   );
 });
