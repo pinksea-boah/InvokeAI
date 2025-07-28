@@ -10,39 +10,12 @@ import {
   Text,
   useDisclosure,
 } from '@invoke-ai/ui-library';
-import { useStore } from '@nanostores/react';
-import { $authToken } from 'app/store/nanostores/authToken';
-import { useAppSelector } from 'app/store/storeHooks';
 import { useCallback } from 'react';
-
-// OAuth 엔드포인트 상수
-const OAUTH_ENDPOINTS = {
-  GOOGLE: '/api/auth/google',
-} as const;
+import { useAuth } from 'features/system/hooks/useAuth';
 
 export const LoginModal = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const authToken = useStore($authToken);
-  const user = useAppSelector((state) => state.user?.user ?? null);
-
-  const isAuthenticated = Boolean(authToken);
-
-  // OAuth 로그인 - 새 창으로 리다이렉트
-  const loginWithGoogle = useCallback(() => {
-    const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
-    // const redirectUrl = encodeURIComponent(window.location.origin);
-    const oauthUrl = `${apiBaseUrl}${OAUTH_ENDPOINTS.GOOGLE}`;
-
-    window.location.href = oauthUrl;
-  }, []);
-
-  // 로그아웃 처리
-  const handleLogout = useCallback(() => {
-    // 토큰 제거
-    $authToken.set(undefined);
-    // 페이지 새로고침으로 상태 초기화
-    window.location.reload();
-  }, []);
+  const { isAuthenticated, loginWithGoogle, handleLogout } = useAuth();
 
   // 인증 버튼 클릭 핸들러
   const handleAuth = useCallback(() => {
@@ -60,7 +33,7 @@ export const LoginModal = () => {
         onClick={handleAuth}
         variant="ghost"
         size="sm"
-        color="base.50"
+        color="base.300"
         _hover={{
           bg: 'base.200',
           color: 'base.50',
@@ -73,7 +46,7 @@ export const LoginModal = () => {
         bg="whiteAlpha.200"
         backdropFilter="blur(8px)"
       >
-        {isAuthenticated ? user?.display_name || user?.email?.split('@')[0] || 'Log out' : 'Log in'}
+        {isAuthenticated ? 'Log out' : 'Log in'}
       </Button>
 
       {/* 로그인 모달 */}
@@ -98,6 +71,7 @@ export const LoginModal = () => {
                 w="full"
                 h="52px"
                 bg="white"
+                _hover={{ bg: 'gray.50', boxShadow: 'xl', transform: 'scale(1.02)' }}
                 transition="all 0.3s"
                 borderRadius="16px"
                 display="flex"
@@ -105,18 +79,13 @@ export const LoginModal = () => {
                 justifyContent="center"
                 gap={3}
                 boxShadow="lg"
-                _hover={{
-                  bg: 'gray.50',
-                  boxShadow: 'xl',
-                  transform: 'scale(1.02)',
-                }}
                 _active={{ transform: 'scale(0.98)' }}
                 border="1px solid"
                 borderColor="gray.200"
                 position="relative"
                 overflow="hidden"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -134,9 +103,7 @@ export const LoginModal = () => {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                <Text color="gray.800" fontWeight="medium" fontSize="sm">
-                  Continue with Google
-                </Text>
+                <span className="text-gray-800 font-medium text-sm">Continue with Google</span>
               </Button>
             </Flex>
           </ModalBody>
