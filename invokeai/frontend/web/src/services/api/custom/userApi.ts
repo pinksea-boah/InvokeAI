@@ -14,10 +14,24 @@ export const userApi = createApi({
     credentials: 'include', // 쿠키 포함
     prepareHeaders: (headers) => {
       const token = $authToken.get();
+      console.log('🔐 userApi - prepareHeaders 호출:', {
+        hasToken: !!token,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : null,
+        baseUrl: $apiServerUrl.get() || 'http://localhost:8080',
+      });
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
+        console.log('✅ userApi - Authorization 헤더 설정 완료');
+      } else {
+        console.log('⚠️ userApi - 토큰이 없어서 Authorization 헤더 미설정');
       }
       headers.set('Content-Type', 'application/json');
+
+      console.log('📋 userApi - 최종 헤더:', {
+        authorization: headers.get('Authorization'),
+        contentType: headers.get('Content-Type'),
+      });
+
       return headers;
     },
   }),

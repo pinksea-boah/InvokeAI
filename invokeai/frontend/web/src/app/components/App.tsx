@@ -15,6 +15,7 @@ import { memo, useCallback, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useRefreshTokenMutation } from 'services/api/custom/sessionApi';
 import { useGetUserInfoQuery } from 'services/api/custom/userApi';
+import { api } from 'services/api';
 
 import AppErrorBoundaryFallback from './AppErrorBoundaryFallback';
 import ThemeLocaleProvider from './ThemeLocaleProvider';
@@ -40,25 +41,47 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
   // 최초 마운트 시 refresh token으로 access token 발급
   useEffect(() => {
     if (!authToken) {
+      console.log('🔄 App - 토큰 없음, refresh token으로 액세스 토큰 발급 시작');
       refreshToken()
         .unwrap()
         .then((result) => {
           if (result.status === 'success') {
             if (import.meta.env.MODE === 'development') {
               // eslint-disable-next-line no-console
-              console.log('accessToken 발급 성공', result.access_token);
+              console.log('✅ App - accessToken 발급 성공', result.access_token);
             }
             $authToken.set(result.access_token);
+            if (import.meta.env.MODE === 'development') {
+              console.log('🔍 App - 토큰 저장 후 상태 확인:', {
+                storedToken: $authToken.get() ? `${$authToken.get()?.substring(0, 20)}...` : null,
+                timestamp: new Date().toISOString(),
+              });
+            }
           }
         })
         .catch((error) => {
           if (import.meta.env.MODE === 'development') {
             // eslint-disable-next-line no-console
-            console.error('accessToken 발급 실패', error);
+            console.error('❌ App - accessToken 발급 실패', error);
           }
         });
     }
   }, [authToken, refreshToken]);
+
+  // authToken이 설정된 후 main API들을 다시 호출
+  useEffect(() => {
+    if (authToken) {
+      console.log('🔄 App - 토큰 설정됨, main API 재호출 시작');
+      // 모든 main API 쿼리를 무효화하여 재호출
+      dispatch(api.util.invalidateTags(['AppVersion', 'AppConfig', 'Board', 'ModelConfig', 'Workflow', 'Image']));
+
+      // 실패한 요청들을 다시 시도
+      setTimeout(() => {
+        console.log('🔄 App - 실패한 요청들 재시도');
+        dispatch(api.util.resetApiState());
+      }, 100);
+    }
+  }, [authToken, dispatch]);
 
   // 사용자 정보를 Redux에 설정
   useEffect(() => {

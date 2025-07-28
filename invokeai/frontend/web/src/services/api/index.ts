@@ -70,8 +70,31 @@ const dynamicBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryE
     (args instanceof Object && args.url.includes('openapi.json')) ||
     (typeof args === 'string' && args.includes('openapi.json'));
 
+  // 디버깅: API 요청 정보 확인
+  console.log('🌐 mainApi - dynamicBaseQuery 호출:', {
+    hasAuthToken: !!authToken,
+    tokenPreview: authToken ? `${authToken.substring(0, 20)}...` : null,
+    baseUrl,
+    isOpenAPIRequest,
+    requestUrl: args instanceof Object ? args.url : args,
+    timestamp: new Date().toISOString(),
+  });
+
+  // openapi.json이 아닌 요청에서 authToken이 없으면 에러 반환
+  if (!isOpenAPIRequest && !authToken) {
+    console.log('⏳ mainApi - 토큰이 없어서 요청 차단');
+    return {
+      error: {
+        status: 'CUSTOM_ERROR',
+        error: 'AUTH_TOKEN_NOT_AVAILABLE',
+        data: '인증 토큰이 아직 설정되지 않았습니다.',
+      },
+    };
+  }
+
   const fetchBaseQueryArgs: FetchBaseQueryArgs = {
     baseUrl: baseUrl || window.location.href.replace(/\/$/, ''),
+    credentials: 'include', // 쿠키 포함
   };
 
   // When fetching the openapi.json, we need to remove circular references from the JSON.
@@ -82,19 +105,32 @@ const dynamicBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryE
   // openapi.json isn't protected by authorization, but all other requests need to include the auth token and project id.
   if (!isOpenAPIRequest) {
     fetchBaseQueryArgs.prepareHeaders = (headers) => {
+      console.log('🔐 mainApi - prepareHeaders 시작:', {
+        hasAuthToken: !!authToken,
+        tokenPreview: authToken ? `${authToken.substring(0, 20)}...` : null,
+        requestUrl: args instanceof Object ? args.url : args,
+      });
       if (authToken) {
         headers.set('Authorization', `Bearer ${authToken}`);
+        console.log('✅ mainApi - Authorization 헤더 설정 완료');
+      } else {
+        console.log('⚠️ mainApi - 토큰이 없어서 Authorization 헤더 미설정');
       }
       if (projectId) {
         headers.set('project-id', projectId);
+        console.log('✅ mainApi - project-id 헤더 설정 완료');
       }
+
+      console.log('📋 mainApi - 최종 헤더:', {
+        authorization: headers.get('Authorization'),
+        contentType: headers.get('Content-Type'),
+        projectId: headers.get('project-id'),
+      });
 
       return headers;
     };
   }
-
   const rawBaseQuery = fetchBaseQuery(fetchBaseQueryArgs);
-
   return rawBaseQuery(args, api, extraOptions);
 };
 
