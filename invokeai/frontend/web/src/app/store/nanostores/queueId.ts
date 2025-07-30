@@ -10,6 +10,7 @@ export const $queueId = atom<string>(DEFAULT_QUEUE_ID);
  * @returns 사용자별 Queue ID
  */
 export const getUserQueueId = (userId: string): string => {
+  console.log('🔧 getUserQueueId - userId:', userId);
   return `${userId}`;
 };
 
@@ -22,4 +23,12 @@ export const setUserQueueId = (userId: string): void => {
   $queueId.set(userQueueId);
   /* eslint-disable no-console */
   console.log('🔧 Queue ID 설정:', { userId, userQueueId });
+};
+
+/**
+ * 인증되지 않은 상태로 Queue ID 초기화
+ */
+export const resetQueueId = (): void => {
+  $queueId.set(DEFAULT_QUEUE_ID);
+  console.log('🔧 Queue ID 초기화:', DEFAULT_QUEUE_ID);
 };

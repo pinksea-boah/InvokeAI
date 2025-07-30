@@ -1,5 +1,6 @@
 import { useStore } from '@nanostores/react';
 import { $authToken } from 'app/store/nanostores/authToken';
+import { resetQueueId } from 'app/store/nanostores/queueId';
 import { useAppDispatch } from 'app/store/storeHooks';
 import { clearUser } from 'app/store/userSlice';
 import { useCallback } from 'react';
@@ -47,6 +48,10 @@ export const useAuth = () => {
       // 로컬 토큰 제거
       $authToken.set(undefined);
       console.log('✅ useAuth - 로컬 토큰 제거 완료');
+
+      // Queue ID 초기화
+      resetQueueId();
+      console.log('✅ useAuth - Queue ID 초기화 완료');
 
       // Redux 상태 초기화
       dispatch(clearUser());

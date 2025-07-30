@@ -2,6 +2,7 @@ import type { EntityState, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit
 import { createEntityAdapter } from '@reduxjs/toolkit';
 import { getSelectorsOptions } from 'app/store/createMemoizedSelector';
 import { $queueId } from 'app/store/nanostores/queueId';
+import { $authToken } from 'app/store/nanostores/authToken';
 import { listParamsReset } from 'features/queue/store/queueSlice';
 import queryString from 'query-string';
 import type { components, paths } from 'services/api/schema';
@@ -11,11 +12,27 @@ import { api, buildV1Url, LIST_ALL_TAG, LIST_TAG } from '..';
 
 /**
  * Builds an endpoint URL for the queue router
+ * 인증 상태에 따라 적절한 Queue ID를 사용합니다.
  * @example
  * buildQueueUrl('some-path')
  * // '/api/v1/queue/queue_id/some-path'
  */
-const buildQueueUrl = (path: string = '') => buildV1Url(`queue/${$queueId.get()}/${path}`);
+const buildQueueUrl = (path: string = '') => {
+  const authToken = $authToken.get();
+  const queueId = $queueId.get();
+
+  // 인증되지 않은 상태에서는 default queue 사용
+  const effectiveQueueId = authToken ? queueId : 'default';
+
+  console.log('🔧 buildQueueUrl:', {
+    hasAuthToken: !!authToken,
+    queueId,
+    effectiveQueueId,
+    path,
+  });
+
+  return buildV1Url(`queue/${effectiveQueueId}/${path}`);
+};
 
 const getListQueueItemsUrl = (queryArgs?: paths['/api/v1/queue/{queue_id}/list']['get']['parameters']['query']) => {
   const query = queryArgs

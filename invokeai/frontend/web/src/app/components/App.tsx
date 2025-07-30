@@ -114,6 +114,10 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
 
       // 사용자별 Queue ID 설정
       setUserQueueId(userInfo.id);
+
+      // Queue API 재호출 (사용자별 Queue로 변경되었으므로)
+      console.log('🔄 App - 사용자 정보 로드 후 Queue API 재호출');
+      dispatch(api.util.invalidateTags(['SessionQueueStatus', 'CurrentSessionQueueItem', 'NextSessionQueueItem']));
     }
   }, [userInfo, dispatch]);
 
