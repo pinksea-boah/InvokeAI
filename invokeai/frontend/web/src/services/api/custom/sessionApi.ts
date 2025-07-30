@@ -15,6 +15,7 @@ export const sessionApi = createApi({
     credentials: 'include', // HTTP-only 쿠키 포함
     prepareHeaders: (headers) => {
       const token = $authToken.get();
+      /* eslint-disable no-console */
       console.log('🔐 sessionApi - prepareHeaders 호출:', {
         hasToken: !!token,
         tokenPreview: token ? `${token.substring(0, 20)}...` : null,

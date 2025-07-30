@@ -20,5 +20,6 @@ export const getUserQueueId = (userId: string): string => {
 export const setUserQueueId = (userId: string): void => {
   const userQueueId = getUserQueueId(userId);
   $queueId.set(userQueueId);
+  /* eslint-disable no-console */
   console.log('🔧 Queue ID 설정:', { userId, userQueueId });
 };

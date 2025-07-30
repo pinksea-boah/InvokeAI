@@ -26,6 +26,8 @@ export const useAuth = () => {
   const loginWithGoogle = useCallback(() => {
     const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
     const oauthUrl = `${apiBaseUrl}${OAUTH_ENDPOINTS.GOOGLE}`;
+    /* eslint-disable no-console */
+
     console.log('🚀 useAuth - Google 로그인 시작:', oauthUrl);
     window.location.href = oauthUrl;
   }, []);

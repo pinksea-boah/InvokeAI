@@ -42,6 +42,7 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
   // 최초 마운트 시 refresh token으로 access token 발급
   useEffect(() => {
     if (!authToken) {
+      /* eslint-disable no-console */
       console.log('🔄 App - 토큰 없음, refresh token으로 액세스 토큰 발급 시작');
       refreshToken()
         .unwrap()

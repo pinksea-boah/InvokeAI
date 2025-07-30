@@ -71,6 +71,7 @@ const dynamicBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryE
     (typeof args === 'string' && args.includes('openapi.json'));
 
   // 디버깅: API 요청 정보 확인
+  /* eslint-disable no-console */
   console.log('🌐 mainApi - dynamicBaseQuery 호출:', {
     hasAuthToken: !!authToken,
     tokenPreview: authToken ? `${authToken.substring(0, 20)}...` : null,
@@ -82,7 +83,6 @@ const dynamicBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryE
 
   // openapi.json이 아닌 요청에서 authToken이 없으면 에러 반환
   if (!isOpenAPIRequest && !authToken) {
-    console.log('⏳ mainApi - 토큰이 없어서 요청 차단');
     return {
       error: {
         status: 'CUSTOM_ERROR',
@@ -105,6 +105,7 @@ const dynamicBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryE
   // openapi.json isn't protected by authorization, but all other requests need to include the auth token and project id.
   if (!isOpenAPIRequest) {
     fetchBaseQueryArgs.prepareHeaders = (headers) => {
+      /* eslint-disable no-console */
       console.log('🔐 mainApi - prepareHeaders 시작:', {
         hasAuthToken: !!authToken,
         tokenPreview: authToken ? `${authToken.substring(0, 20)}...` : null,
@@ -112,20 +113,10 @@ const dynamicBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryE
       });
       if (authToken) {
         headers.set('Authorization', `Bearer ${authToken}`);
-        console.log('✅ mainApi - Authorization 헤더 설정 완료');
-      } else {
-        console.log('⚠️ mainApi - 토큰이 없어서 Authorization 헤더 미설정');
       }
       if (projectId) {
         headers.set('project-id', projectId);
-        console.log('✅ mainApi - project-id 헤더 설정 완료');
       }
-
-      console.log('📋 mainApi - 최종 헤더:', {
-        authorization: headers.get('Authorization'),
-        contentType: headers.get('Content-Type'),
-        projectId: headers.get('project-id'),
-      });
 
       return headers;
     };
