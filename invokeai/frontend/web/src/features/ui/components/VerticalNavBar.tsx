@@ -6,7 +6,6 @@ import InvokeAILogoComponent from 'features/system/components/InvokeAILogoCompon
 import { LoginModal } from 'features/system/components/LoginModal';
 import SettingsMenu from 'features/system/components/SettingsModal/SettingsMenu';
 import StatusIndicator from 'features/system/components/StatusIndicator';
-import { VideosModalButton } from 'features/system/components/VideosModal/VideosModalButton';
 import {
   selectWithCanvasTab,
   selectWithGenerateTab,
@@ -26,7 +25,6 @@ import {
   PiTextAaBold,
 } from 'react-icons/pi';
 
-import { Notifications } from './Notifications';
 import { TabButton } from './TabButton';
 
 export const VerticalNavBar = memo(() => {
@@ -63,8 +61,8 @@ export const VerticalNavBar = memo(() => {
       </Flex>
       <Spacer />
       <StatusIndicator />
-      <Notifications />
-      <VideosModalButton />
+      {/* <Notifications />
+      <VideosModalButton /> */}
       <LoginModal />
       {customNavComponent ? customNavComponent : <SettingsMenu />}
     </Flex>

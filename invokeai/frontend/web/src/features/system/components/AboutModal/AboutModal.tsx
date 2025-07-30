@@ -17,7 +17,7 @@ import {
 } from '@invoke-ai/ui-library';
 import { deepClone } from 'common/util/deepClone';
 import DataViewer from 'features/gallery/components/ImageMetadataViewer/DataViewer';
-import { discordLink, githubLink, websiteLink } from 'features/system/store/constants';
+import { discordLink, websiteLink } from 'features/system/store/constants';
 import InvokeLogoYellow from 'public/assets/images/invoke-tag-lrg.svg';
 import type { ReactElement } from 'react';
 import { cloneElement, memo, useMemo } from 'react';
@@ -72,10 +72,7 @@ const AboutModal = ({ children }: AboutModalProps) => {
                 <Flex flexDir="column" gap={3} justifyContent="center" alignItems="center" h="full">
                   <Image src={InvokeLogoYellow} alt="invoke-logo" w="120px" />
                   {appVersion && <Text>{`v${appVersion?.version}`}</Text>}
-                  <Grid templateColumns="repeat(2, 1fr)" gap="3">
-                    <GridItem>
-                      <ExternalLink href={githubLink} label={t('common.githubLabel')} />
-                    </GridItem>
+                  <Grid templateColumns="repeat(1, 1fr)" gap="3">
                     <GridItem>
                       <ExternalLink href={discordLink} label={t('common.discordLabel')} />
                     </GridItem>

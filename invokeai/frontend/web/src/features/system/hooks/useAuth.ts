@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
 import { useStore } from '@nanostores/react';
 import { $authToken } from 'app/store/nanostores/authToken';
 import { useAppDispatch } from 'app/store/storeHooks';
 import { clearUser } from 'app/store/userSlice';
+import { useCallback } from 'react';
 import { useLogoutMutation } from 'services/api/custom/userApi';
 
 // OAuth 엔드포인트 상수
@@ -49,12 +49,6 @@ export const useAuth = () => {
       // Redux 상태 초기화
       dispatch(clearUser());
       console.log('✅ useAuth - Redux 상태 초기화 완료');
-
-      // 모든 쿠키 삭제
-      document.cookie.split(';').forEach(function (c) {
-        document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
-      });
-      console.log('✅ useAuth - 쿠키 삭제 완료');
 
       // 페이지 새로고침으로 상태 초기화
       window.location.reload();

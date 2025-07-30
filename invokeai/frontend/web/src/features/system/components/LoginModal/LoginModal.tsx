@@ -10,8 +10,8 @@ import {
   Text,
   useDisclosure,
 } from '@invoke-ai/ui-library';
-import { useCallback } from 'react';
 import { useAuth } from 'features/system/hooks/useAuth';
+import { useCallback } from 'react';
 
 export const LoginModal = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();

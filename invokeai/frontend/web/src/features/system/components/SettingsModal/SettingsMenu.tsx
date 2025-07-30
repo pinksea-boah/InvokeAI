@@ -12,30 +12,19 @@ import {
 import AboutModal from 'features/system/components/AboutModal/AboutModal';
 import HotkeysModal from 'features/system/components/HotkeysModal/HotkeysModal';
 import { useFeatureStatus } from 'features/system/hooks/useFeatureStatus';
-import { discordLink, githubLink } from 'features/system/store/constants';
+import { discordLink } from 'features/system/store/constants';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  PiBugBeetleBold,
-  PiGearSixFill,
-  PiInfoBold,
-  PiKeyboardBold,
-  PiShareNetworkFill,
-  PiToggleRightFill,
-  PiUsersBold,
-} from 'react-icons/pi';
-import { RiDiscordFill, RiGithubFill } from 'react-icons/ri';
+import { PiGearSixFill, PiInfoBold, PiKeyboardBold, PiToggleRightFill } from 'react-icons/pi';
+import { RiDiscordFill } from 'react-icons/ri';
 
 import SettingsModal from './SettingsModal';
-import { SettingsUpsellMenuItem } from './SettingsUpsellMenuItem';
 const SettingsMenu = () => {
   const { t } = useTranslation();
   const { isOpen, onOpen, onClose } = useDisclosure();
   useGlobalMenuClose(onClose);
 
-  const isBugLinkEnabled = useFeatureStatus('bugLink');
   const isDiscordLinkEnabled = useFeatureStatus('discordLink');
-  const isGithubLinkEnabled = useFeatureStatus('githubLink');
   const isAboutModalEnabled = useFeatureStatus('aboutModal');
 
   return (
@@ -54,13 +43,15 @@ const SettingsMenu = () => {
       />
       <Portal>
         <MenuList>
-          <MenuGroup title={t('upsell.professional')}>
+          {/* //Artifex : ui change */}
+          {/* <MenuGroup title={t('upsell.professional')}>
             <SettingsUpsellMenuItem menuText={t('upsell.inviteTeammates')} menuIcon={<PiUsersBold />} />
             <SettingsUpsellMenuItem menuText={t('upsell.shareAccess')} menuIcon={<PiShareNetworkFill />} />
-          </MenuGroup>
+          </MenuGroup> */}
 
           <MenuGroup title={t('common.communityLabel')}>
-            {isGithubLinkEnabled && (
+            {/* //Artifex : ui change */}
+            {/* {isGithubLinkEnabled && (
               <MenuItem as="a" href={githubLink} target="_blank" icon={<RiGithubFill />}>
                 {t('common.githubLabel')}
               </MenuItem>
@@ -69,7 +60,7 @@ const SettingsMenu = () => {
               <MenuItem as="a" href={`${githubLink}/issues`} target="_blank" icon={<PiBugBeetleBold />}>
                 {t('common.reportBugLabel')}
               </MenuItem>
-            )}
+            )} */}
             {isDiscordLinkEnabled && (
               <MenuItem as="a" href={discordLink} target="_blank" icon={<RiDiscordFill />}>
                 {t('common.discordLabel')}
