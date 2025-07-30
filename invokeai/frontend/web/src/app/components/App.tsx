@@ -4,6 +4,7 @@ import { GlobalHookIsolator } from 'app/components/GlobalHookIsolator';
 import { GlobalModalIsolator } from 'app/components/GlobalModalIsolator';
 import { $didStudioInit, type StudioInitAction } from 'app/hooks/useStudioInitAction';
 import { $authToken } from 'app/store/nanostores/authToken';
+import { setUserQueueId } from 'app/store/nanostores/queueId';
 import { useAppDispatch } from 'app/store/storeHooks';
 import { setUser, setUserError } from 'app/store/userSlice';
 import type { PartialAppConfig } from 'app/types/invokeai';
@@ -13,9 +14,9 @@ import { useClearStorage } from 'common/hooks/useClearStorage';
 import { AppContent } from 'features/ui/components/AppContent';
 import { memo, useCallback, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { api } from 'services/api';
 import { useRefreshTokenMutation } from 'services/api/custom/sessionApi';
 import { useGetUserInfoQuery } from 'services/api/custom/userApi';
-import { api } from 'services/api';
 
 import AppErrorBoundaryFallback from './AppErrorBoundaryFallback';
 import ThemeLocaleProvider from './ThemeLocaleProvider';
@@ -109,6 +110,9 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
         updated_at: userInfo.updated_at,
       };
       dispatch(setUser(user));
+
+      // 사용자별 Queue ID 설정
+      setUserQueueId(userInfo.id);
     }
   }, [userInfo, dispatch]);
 
