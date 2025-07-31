@@ -5,7 +5,7 @@ import traceback
 from typing import Optional
 
 import pydantic
-from fastapi import APIRouter, File, Form, HTTPException, Path, Response, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import FileResponse
 from PIL import Image
 from pydantic import BaseModel, Field
@@ -45,11 +45,12 @@ style_presets_router = APIRouter(prefix="/v1/style_presets", tags=["style_preset
 )
 async def get_style_preset(
     style_preset_id: str = Path(description="The style preset to get"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> StylePresetRecordWithImage:
     """Gets a style preset"""
     try:
         image = ApiDependencies.invoker.services.style_preset_image_files.get_url(style_preset_id)
-        style_preset = ApiDependencies.invoker.services.style_preset_records.get(style_preset_id)
+        style_preset = ApiDependencies.invoker.services.style_preset_records.get(style_preset_id, user_id=user_id)
         return StylePresetRecordWithImage(image=image, **style_preset.model_dump())
     except StylePresetNotFoundError:
         raise HTTPException(status_code=404, detail="Style preset not found")
@@ -66,6 +67,7 @@ async def update_style_preset(
     image: Optional[UploadFile] = File(description="The image file to upload", default=None),
     style_preset_id: str = Path(description="The id of the style preset to update"),
     data: str = Form(description="The data of the style preset to update"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> StylePresetRecordWithImage:
     """Updates a style preset"""
     if image is not None:
@@ -107,7 +109,7 @@ async def update_style_preset(
 
     style_preset_image = ApiDependencies.invoker.services.style_preset_image_files.get_url(style_preset_id)
     style_preset = ApiDependencies.invoker.services.style_preset_records.update(
-        style_preset_id=style_preset_id, changes=changes
+        style_preset_id=style_preset_id, changes=changes, user_id=user_id
     )
     return StylePresetRecordWithImage(image=style_preset_image, **style_preset.model_dump())
 
@@ -118,6 +120,7 @@ async def update_style_preset(
 )
 async def delete_style_preset(
     style_preset_id: str = Path(description="The style preset to delete"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> None:
     """Deletes a style preset"""
     try:
@@ -125,7 +128,7 @@ async def delete_style_preset(
     except StylePresetImageFileNotFoundException:
         pass
 
-    ApiDependencies.invoker.services.style_preset_records.delete(style_preset_id)
+    ApiDependencies.invoker.services.style_preset_records.delete(style_preset_id, user_id=user_id)
 
 
 @style_presets_router.post(
@@ -138,6 +141,7 @@ async def delete_style_preset(
 async def create_style_preset(
     image: Optional[UploadFile] = File(description="The image file to upload", default=None),
     data: str = Form(description="The data of the style preset to create"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> StylePresetRecordWithImage:
     """Creates a style preset"""
 
@@ -155,7 +159,7 @@ async def create_style_preset(
 
     preset_data = PresetData(positive_prompt=positive_prompt, negative_prompt=negative_prompt)
     style_preset = StylePresetWithoutId(name=name, preset_data=preset_data, type=type)
-    new_style_preset = ApiDependencies.invoker.services.style_preset_records.create(style_preset=style_preset)
+    new_style_preset = ApiDependencies.invoker.services.style_preset_records.create(style_preset=style_preset, user_id=user_id)
 
     if image is not None:
         if not image.content_type or not image.content_type.startswith("image"):
@@ -185,10 +189,12 @@ async def create_style_preset(
         200: {"model": list[StylePresetRecordWithImage]},
     },
 )
-async def list_style_presets() -> list[StylePresetRecordWithImage]:
+async def list_style_presets(
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
+) -> list[StylePresetRecordWithImage]:
     """Gets a page of style presets"""
     style_presets_with_image: list[StylePresetRecordWithImage] = []
-    style_presets = ApiDependencies.invoker.services.style_preset_records.get_many()
+    style_presets = ApiDependencies.invoker.services.style_preset_records.get_many(user_id=user_id)
     for preset in style_presets:
         image = ApiDependencies.invoker.services.style_preset_image_files.get_url(preset.id)
         style_preset_with_image = StylePresetRecordWithImage(image=image, **preset.model_dump())
@@ -211,11 +217,12 @@ async def list_style_presets() -> list[StylePresetRecordWithImage]:
 )
 async def get_style_preset_image(
     style_preset_id: str = Path(description="The id of the style preset image to get"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> FileResponse:
     """Gets an image file that previews the model"""
 
     try:
-        path = ApiDependencies.invoker.services.style_preset_image_files.get_path(style_preset_id)
+        path = ApiDependencies.invoker.services.style_preset_image_files.get_path(style_preset_id, user_id=user_id)
 
         response = FileResponse(
             path,
@@ -235,7 +242,9 @@ async def get_style_preset_image(
     responses={200: {"content": {"text/csv": {}}, "description": "A CSV file with the requested data."}},
     status_code=200,
 )
-async def export_style_presets():
+async def export_style_presets(
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
+):
     # Create an in-memory stream to store the CSV data
     output = io.StringIO()
     writer = csv.writer(output)
@@ -243,7 +252,7 @@ async def export_style_presets():
     # Write the header
     writer.writerow(["name", "prompt", "negative_prompt"])
 
-    style_presets = ApiDependencies.invoker.services.style_preset_records.get_many(type=PresetType.User)
+    style_presets = ApiDependencies.invoker.services.style_preset_records.get_many(type=PresetType.User, user_id=user_id)
 
     for preset in style_presets:
         writer.writerow([preset.name, preset.preset_data.positive_prompt, preset.preset_data.negative_prompt])
@@ -262,10 +271,13 @@ async def export_style_presets():
     "/import",
     operation_id="import_style_presets",
 )
-async def import_style_presets(file: UploadFile = File(description="The file to import")):
+async def import_style_presets(
+    file: UploadFile = File(description="The file to import"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
+):
     try:
         style_presets = await parse_presets_from_file(file)
-        ApiDependencies.invoker.services.style_preset_records.create_many(style_presets)
+        ApiDependencies.invoker.services.style_preset_records.create_many(style_presets, user_id=user_id)
     except InvalidPresetImportDataError as e:
         ApiDependencies.invoker.services.logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))

@@ -54,6 +54,7 @@ async def enqueue_batch(
     queue_id: str = Path(description="The queue id to perform this operation on"),
     batch: Batch = Body(description="Batch to process"),
     prepend: bool = Body(default=False, description="Whether or not to prepend this batch in the queue"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
     validation_run_data: Optional[ValidationRunData] = Body(
         default=None,
         description="The validation run data to use for this batch. This is only used if this is a validation run.",
@@ -62,7 +63,7 @@ async def enqueue_batch(
     """Processes a batch and enqueues the output graphs for execution."""
     try:
         return await ApiDependencies.invoker.services.session_queue.enqueue_batch(
-            queue_id=queue_id, batch=batch, prepend=prepend
+            queue_id=queue_id, batch=batch, prepend=prepend, user_id=user_id
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error while enqueuing batch: {e}")
@@ -108,12 +109,14 @@ async def list_queue_items(
 async def list_all_queue_items(
     queue_id: str = Path(description="The queue id to perform this operation on"),
     destination: Optional[str] = Query(default=None, description="The destination of queue items to fetch"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> list[SessionQueueItem]:
     """Gets all queue items"""
     try:
         return ApiDependencies.invoker.services.session_queue.list_all_queue_items(
             queue_id=queue_id,
             destination=destination,
+            user_id=user_id,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error while listing all queue items: {e}")
