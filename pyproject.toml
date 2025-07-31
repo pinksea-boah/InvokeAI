@@ -73,7 +73,8 @@ dependencies = [
   "pypatchmatch",
   "python-multipart",
   "requests",
-  "semver~=3.0.1"
+  "semver~=3.0.1",
+  "minio",  # MinIO object storage client
 ]
 
 [project.optional-dependencies]
@@ -94,6 +95,7 @@ dependencies = [
   "mkdocstrings[python]>=0.26.1",
 ]
 "dev" = ["jurigged", "pudb", "snakeviz", "gprof2dot"]
+"storage" = ["minio"]  # Object storage support
 "test" = [
   "ruff~=0.11.2",
   "ruff-lsp~=0.0.62",
