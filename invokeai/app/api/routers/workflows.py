@@ -34,11 +34,12 @@ workflows_router = APIRouter(prefix="/v1/workflows", tags=["workflows"])
 )
 async def get_workflow(
     workflow_id: str = Path(description="The workflow to get"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> WorkflowRecordWithThumbnailDTO:
     """Gets a workflow"""
-    try:
-        thumbnail_url = ApiDependencies.invoker.services.workflow_thumbnails.get_url(workflow_id)
-        workflow = ApiDependencies.invoker.services.workflow_records.get(workflow_id)
+    try:    
+        thumbnail_url = ApiDependencies.invoker.services.workflow_thumbnails.get_url(workflow_id, user_id=user_id)
+        workflow = ApiDependencies.invoker.services.workflow_records.get(workflow_id, user_id=user_id)
         return WorkflowRecordWithThumbnailDTO(thumbnail_url=thumbnail_url, **workflow.model_dump())
     except WorkflowNotFoundError:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -53,9 +54,10 @@ async def get_workflow(
 )
 async def update_workflow(
     workflow: Workflow = Body(description="The updated workflow", embed=True),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> WorkflowRecordDTO:
     """Updates a workflow"""
-    return ApiDependencies.invoker.services.workflow_records.update(workflow=workflow)
+    return ApiDependencies.invoker.services.workflow_records.update(workflow=workflow, user_id=user_id)
 
 
 @workflows_router.delete(
@@ -64,10 +66,11 @@ async def update_workflow(
 )
 async def delete_workflow(
     workflow_id: str = Path(description="The workflow to delete"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> None:
     """Deletes a workflow"""
     try:
-        ApiDependencies.invoker.services.workflow_thumbnails.delete(workflow_id)
+        ApiDependencies.invoker.services.workflow_thumbnails.delete(workflow_id, user_id=user_id)
     except WorkflowThumbnailFileNotFoundException:
         # It's OK if the workflow has no thumbnail file. We can still delete the workflow.
         pass
@@ -83,9 +86,10 @@ async def delete_workflow(
 )
 async def create_workflow(
     workflow: WorkflowWithoutID = Body(description="The workflow to create", embed=True),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> WorkflowRecordDTO:
     """Creates a workflow"""
-    return ApiDependencies.invoker.services.workflow_records.create(workflow=workflow)
+    return ApiDependencies.invoker.services.workflow_records.create(workflow=workflow, user_id=user_id)
 
 
 @workflows_router.get(
@@ -107,6 +111,7 @@ async def list_workflows(
     query: Optional[str] = Query(default=None, description="The text to query by (matches name and description)"),
     has_been_opened: Optional[bool] = Query(default=None, description="Whether to include/exclude recent workflows"),
     is_published: Optional[bool] = Query(default=None, description="Whether to include/exclude published workflows"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> PaginatedResults[WorkflowRecordListItemWithThumbnailDTO]:
     """Gets a page of workflows"""
     workflows_with_thumbnails: list[WorkflowRecordListItemWithThumbnailDTO] = []
@@ -120,11 +125,12 @@ async def list_workflows(
         tags=tags,
         has_been_opened=has_been_opened,
         is_published=is_published,
+        user_id=user_id,
     )
     for workflow in workflows.items:
         workflows_with_thumbnails.append(
             WorkflowRecordListItemWithThumbnailDTO(
-                thumbnail_url=ApiDependencies.invoker.services.workflow_thumbnails.get_url(workflow.workflow_id),
+                thumbnail_url=ApiDependencies.invoker.services.workflow_thumbnails.get_url(workflow.workflow_id, user_id=user_id),
                 **workflow.model_dump(),
             )
         )
@@ -147,10 +153,11 @@ async def list_workflows(
 async def set_workflow_thumbnail(
     workflow_id: str = Path(description="The workflow to update"),
     image: UploadFile = File(description="The image file to upload"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ):
     """Sets a workflow's thumbnail image"""
     try:
-        ApiDependencies.invoker.services.workflow_records.get(workflow_id)
+        ApiDependencies.invoker.services.workflow_records.get(workflow_id, user_id=user_id)
     except WorkflowNotFoundError:
         raise HTTPException(status_code=404, detail="Workflow not found")
 
@@ -166,7 +173,7 @@ async def set_workflow_thumbnail(
         raise HTTPException(status_code=415, detail="Failed to read image")
 
     try:
-        ApiDependencies.invoker.services.workflow_thumbnails.save(workflow_id, pil_image)
+        ApiDependencies.invoker.services.workflow_thumbnails.save(workflow_id, pil_image, user_id=user_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -180,15 +187,16 @@ async def set_workflow_thumbnail(
 )
 async def delete_workflow_thumbnail(
     workflow_id: str = Path(description="The workflow to update"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ):
     """Removes a workflow's thumbnail image"""
     try:
-        ApiDependencies.invoker.services.workflow_records.get(workflow_id)
+        ApiDependencies.invoker.services.workflow_records.get(workflow_id, user_id=user_id)
     except WorkflowNotFoundError:
         raise HTTPException(status_code=404, detail="Workflow not found")
 
     try:
-        ApiDependencies.invoker.services.workflow_thumbnails.delete(workflow_id)
+        ApiDependencies.invoker.services.workflow_thumbnails.delete(workflow_id, user_id=user_id)
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -207,11 +215,12 @@ async def delete_workflow_thumbnail(
 )
 async def get_workflow_thumbnail(
     workflow_id: str = Path(description="The id of the workflow thumbnail to get"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> FileResponse:
     """Gets a workflow's thumbnail image"""
 
     try:
-        path = ApiDependencies.invoker.services.workflow_thumbnails.get_path(workflow_id)
+        path = ApiDependencies.invoker.services.workflow_thumbnails.get_path(workflow_id, user_id=user_id)
 
         response = FileResponse(
             path,
@@ -230,11 +239,12 @@ async def get_counts_by_tag(
     tags: list[str] = Query(description="The tags to get counts for"),
     categories: Optional[list[WorkflowCategory]] = Query(default=None, description="The categories to include"),
     has_been_opened: Optional[bool] = Query(default=None, description="Whether to include/exclude recent workflows"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> dict[str, int]:
     """Counts workflows by tag"""
 
     return ApiDependencies.invoker.services.workflow_records.counts_by_tag(
-        tags=tags, categories=categories, has_been_opened=has_been_opened
+        tags=tags, categories=categories, has_been_opened=has_been_opened, user_id=user_id
     )
 
 
@@ -242,11 +252,12 @@ async def get_counts_by_tag(
 async def counts_by_category(
     categories: list[WorkflowCategory] = Query(description="The categories to include"),
     has_been_opened: Optional[bool] = Query(default=None, description="Whether to include/exclude recent workflows"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> dict[str, int]:
     """Counts workflows by category"""
 
     return ApiDependencies.invoker.services.workflow_records.counts_by_category(
-        categories=categories, has_been_opened=has_been_opened
+        categories=categories, has_been_opened=has_been_opened, user_id=user_id
     )
 
 
@@ -256,6 +267,7 @@ async def counts_by_category(
 )
 async def update_opened_at(
     workflow_id: str = Path(description="The workflow to update"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> None:
     """Updates the opened_at field of a workflow"""
-    ApiDependencies.invoker.services.workflow_records.update_opened_at(workflow_id)
+    ApiDependencies.invoker.services.workflow_records.update_opened_at(workflow_id, user_id=user_id)

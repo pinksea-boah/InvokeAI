@@ -232,11 +232,12 @@ async def update_image(
 )
 async def get_image_dto(
     image_name: str = Path(description="The name of image to get"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> ImageDTO:
     """Gets an image's DTO"""
 
     try:
-        return ApiDependencies.invoker.services.images.get_dto(image_name)
+        return ApiDependencies.invoker.services.images.get_dto(image_name, user_id=user_id)
     except Exception:
         raise HTTPException(status_code=404)
 
@@ -248,11 +249,12 @@ async def get_image_dto(
 )
 async def get_image_metadata(
     image_name: str = Path(description="The name of image to get"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> Optional[MetadataField]:
     """Gets an image's metadata"""
 
     try:
-        return ApiDependencies.invoker.services.images.get_metadata(image_name)
+        return ApiDependencies.invoker.services.images.get_metadata(image_name, user_id=user_id)
     except Exception:
         raise HTTPException(status_code=404)
 
@@ -302,13 +304,21 @@ async def get_image_workflow(
 )
 async def get_image_full(
     image_name: str = Path(description="The name of full-resolution image file to get"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> Response:
     """Gets a full-resolution image file"""
 
     try:
-        path = ApiDependencies.invoker.services.images.get_path(image_name)
-        with open(path, "rb") as f:
-            content = f.read()
+        # MinIO 저장소인지 확인
+        image_service = ApiDependencies.invoker.services.image_files
+        if hasattr(image_service, 'get_content'):
+            # MinIO 저장소: get_content 메서드 사용
+            content = image_service.get_content(image_name, thumbnail=False, user_id=user_id)
+        else:
+            # 로컬 저장소: 기존 방식 사용
+            path = ApiDependencies.invoker.services.images.get_path(image_name, user_id=user_id)
+            with open(path, "rb") as f:
+                content = f.read()
         response = Response(content, media_type="image/png")
         response.headers["Cache-Control"] = f"max-age={IMAGE_MAX_AGE}"
         response.headers["Content-Disposition"] = f'inline; filename="{image_name}"'
@@ -331,13 +341,22 @@ async def get_image_full(
 )
 async def get_image_thumbnail(
     image_name: str = Path(description="The name of thumbnail image file to get"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> Response:
     """Gets a thumbnail image file"""
 
     try:
-        path = ApiDependencies.invoker.services.images.get_path(image_name, thumbnail=True)
-        with open(path, "rb") as f:
-            content = f.read()
+        # MinIO 저장소인지 확인
+        image_service = ApiDependencies.invoker.services.image_files
+        if hasattr(image_service, 'get_content'):
+            # MinIO 저장소: get_content 메서드 사용
+            content = image_service.get_content(image_name, thumbnail=True, user_id=user_id)
+        else:
+            # 로컬 저장소: 기존 방식 사용
+            path = ApiDependencies.invoker.services.images.get_path(image_name, thumbnail=True, user_id=user_id)
+            with open(path, "rb") as f:
+                content = f.read()
+        
         response = Response(content, media_type="image/webp")
         response.headers["Cache-Control"] = f"max-age={IMAGE_MAX_AGE}"
         return response
@@ -385,11 +404,12 @@ async def list_image_dtos(
     order_dir: SQLiteDirection = Query(default=SQLiteDirection.Descending, description="The order of sort"),
     starred_first: bool = Query(default=True, description="Whether to sort by starred images first"),
     search_term: Optional[str] = Query(default=None, description="The term to search for"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> OffsetPaginatedResults[ImageDTO]:
     """Gets a list of image DTOs"""
 
     image_dtos = ApiDependencies.invoker.services.images.get_many(
-        offset, limit, starred_first, order_dir, image_origin, categories, is_intermediate, board_id, search_term
+        offset, limit, starred_first, order_dir, image_origin, categories, is_intermediate, board_id, search_term, user_id
     )
 
     return image_dtos
@@ -577,6 +597,7 @@ async def get_image_names(
     order_dir: SQLiteDirection = Query(default=SQLiteDirection.Descending, description="The order of sort"),
     starred_first: bool = Query(default=True, description="Whether to sort by starred images first"),
     search_term: Optional[str] = Query(default=None, description="The term to search for"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> ImageNamesResult:
     """Gets ordered list of image names with metadata for optimistic updates"""
 
@@ -589,6 +610,7 @@ async def get_image_names(
             is_intermediate=is_intermediate,
             board_id=board_id,
             search_term=search_term,
+            user_id=user_id,
         )
         return result
     except Exception:

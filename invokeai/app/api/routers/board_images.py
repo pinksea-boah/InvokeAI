@@ -1,5 +1,6 @@
-from fastapi import Body, HTTPException
+from fastapi import Body, HTTPException, Query
 from fastapi.routing import APIRouter
+from typing import Optional
 
 from invokeai.app.api.dependencies import ApiDependencies
 from invokeai.app.services.images.images_common import AddImagesToBoardResult, RemoveImagesFromBoardResult
@@ -19,13 +20,14 @@ board_images_router = APIRouter(prefix="/v1/board_images", tags=["boards"])
 async def add_image_to_board(
     board_id: str = Body(description="The id of the board to add to"),
     image_name: str = Body(description="The name of the image to add"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> AddImagesToBoardResult:
     """Creates a board_image"""
     try:
         added_images: set[str] = set()
         affected_boards: set[str] = set()
         old_board_id = ApiDependencies.invoker.services.images.get_dto(image_name).board_id or "none"
-        ApiDependencies.invoker.services.board_images.add_image_to_board(board_id=board_id, image_name=image_name)
+        ApiDependencies.invoker.services.board_images.add_image_to_board(board_id=board_id, image_name=image_name, user_id=user_id)
         added_images.add(image_name)
         affected_boards.add(board_id)
         affected_boards.add(old_board_id)
@@ -49,13 +51,14 @@ async def add_image_to_board(
 )
 async def remove_image_from_board(
     image_name: str = Body(description="The name of the image to remove", embed=True),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> RemoveImagesFromBoardResult:
     """Removes an image from its board, if it had one"""
     try:
         removed_images: set[str] = set()
         affected_boards: set[str] = set()
         old_board_id = ApiDependencies.invoker.services.images.get_dto(image_name).board_id or "none"
-        ApiDependencies.invoker.services.board_images.remove_image_from_board(image_name=image_name)
+        ApiDependencies.invoker.services.board_images.remove_image_from_board(image_name=image_name, user_id=user_id)
         removed_images.add(image_name)
         affected_boards.add("none")
         affected_boards.add(old_board_id)
@@ -80,6 +83,7 @@ async def remove_image_from_board(
 async def add_images_to_board(
     board_id: str = Body(description="The id of the board to add to"),
     image_names: list[str] = Body(description="The names of the images to add", embed=True),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> AddImagesToBoardResult:
     """Adds a list of images to a board"""
     try:
@@ -91,6 +95,7 @@ async def add_images_to_board(
                 ApiDependencies.invoker.services.board_images.add_image_to_board(
                     board_id=board_id,
                     image_name=image_name,
+                    user_id=user_id,
                 )
                 added_images.add(image_name)
                 affected_boards.add(board_id)
@@ -117,6 +122,7 @@ async def add_images_to_board(
 )
 async def remove_images_from_board(
     image_names: list[str] = Body(description="The names of the images to remove", embed=True),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> RemoveImagesFromBoardResult:
     """Removes a list of images from their board, if they had one"""
     try:
@@ -125,7 +131,7 @@ async def remove_images_from_board(
         for image_name in image_names:
             try:
                 old_board_id = ApiDependencies.invoker.services.images.get_dto(image_name).board_id or "none"
-                ApiDependencies.invoker.services.board_images.remove_image_from_board(image_name=image_name)
+                ApiDependencies.invoker.services.board_images.remove_image_from_board(image_name=image_name, user_id=user_id)
                 removed_images.add(image_name)
                 affected_boards.add("none")
                 affected_boards.add(old_board_id)

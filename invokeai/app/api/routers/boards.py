@@ -34,10 +34,11 @@ class DeleteBoardResult(BaseModel):
 async def create_board(
     board_name: str = Query(description="The name of the board to create", max_length=300),
     is_private: bool = Query(default=False, description="Whether the board is private"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> BoardDTO:
     """Creates a board"""
     try:
-        result = ApiDependencies.invoker.services.boards.create(board_name=board_name)
+        result = ApiDependencies.invoker.services.boards.create(board_name=board_name, user_id=user_id)
         return result
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to create board")
@@ -127,12 +128,13 @@ async def list_boards(
     offset: Optional[int] = Query(default=None, description="The page offset"),
     limit: Optional[int] = Query(default=None, description="The number of boards per page"),
     include_archived: bool = Query(default=False, description="Whether or not to include archived boards in list"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> Union[OffsetPaginatedResults[BoardDTO], list[BoardDTO]]:
     """Gets a list of boards"""
     if all:
-        return ApiDependencies.invoker.services.boards.get_all(order_by, direction, include_archived)
+        return ApiDependencies.invoker.services.boards.get_all(order_by, direction, include_archived, user_id)
     elif offset is not None and limit is not None:
-        return ApiDependencies.invoker.services.boards.get_many(order_by, direction, offset, limit, include_archived)
+        return ApiDependencies.invoker.services.boards.get_many(order_by, direction, offset, limit, include_archived, user_id)
     else:
         raise HTTPException(
             status_code=400,
@@ -149,6 +151,7 @@ async def list_all_board_image_names(
     board_id: str = Path(description="The id of the board or 'none' for uncategorized images"),
     categories: list[ImageCategory] | None = Query(default=None, description="The categories of image to include."),
     is_intermediate: bool | None = Query(default=None, description="Whether to list intermediate images."),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> list[str]:
     """Gets a list of images for a board"""
 
@@ -156,5 +159,6 @@ async def list_all_board_image_names(
         board_id,
         categories,
         is_intermediate,
+        user_id,
     )
     return image_names

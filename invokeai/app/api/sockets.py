@@ -94,17 +94,37 @@ class SocketIO:
         self._app = ASGIApp(socketio_server=self._sio, socketio_path="/ws/socket.io")
         app.mount("/ws", self._app)
 
+        print(f"🔧 Registering socket handlers: {self._sub_queue}, {self._unsub_queue}")
         self._sio.on(self._sub_queue, handler=self._handle_sub_queue)
         self._sio.on(self._unsub_queue, handler=self._handle_unsub_queue)
         self._sio.on(self._sub_bulk_download, handler=self._handle_sub_bulk_download)
         self._sio.on(self._unsub_bulk_download, handler=self._handle_unsub_bulk_download)
 
+        # 모든 이벤트를 캐치하는 디버깅 핸들러 추가
+        self._sio.on('connect', self._handle_connect)
+        self._sio.on('disconnect', self._handle_disconnect)
+
         register_events(QUEUE_EVENTS, self._handle_queue_event)
         register_events(MODEL_EVENTS, self._handle_model_event)
         register_events(BULK_DOWNLOAD_EVENTS, self._handle_bulk_image_download_event)
 
+    async def _handle_connect(self, sid: str, environ: dict) -> None:
+        print(f"🔌 Client connected: {sid}")
+
+    async def _handle_disconnect(self, sid: str) -> None:
+        print(f"🔌 Client disconnected: {sid}")
+
     async def _handle_sub_queue(self, sid: str, data: Any) -> None:
-        await self._sio.enter_room(sid, QueueSubscriptionEvent(**data).queue_id)
+        print(f"📡 _handle_sub_queue called with sid: {sid}, data: {data}")
+        try:
+            queue_id = QueueSubscriptionEvent(**data).queue_id
+            print(f"📡 Client {sid} subscribing to queue: {queue_id}")
+            await self._sio.enter_room(sid, queue_id)
+            print(f"📡 Client {sid} successfully joined room: {queue_id}")
+        except Exception as e:
+            print(f"❌ Error in _handle_sub_queue: {e}")
+            import traceback
+            traceback.print_exc()
 
     async def _handle_unsub_queue(self, sid: str, data: Any) -> None:
         await self._sio.leave_room(sid, QueueSubscriptionEvent(**data).queue_id)
@@ -116,7 +136,12 @@ class SocketIO:
         await self._sio.leave_room(sid, BulkDownloadSubscriptionEvent(**data).bulk_download_id)
 
     async def _handle_queue_event(self, event: FastAPIEvent[QueueEventBase]):
-        await self._sio.emit(event=event[0], data=event[1].model_dump(mode="json"), room=event[1].queue_id)
+        # 디버깅: 웹소켓 이벤트 라우팅 로깅
+        room = event[1].queue_id
+        print(f"📡 WebSocket Event: {event[0]} -> Room: {room}")
+        
+        await self._sio.emit(event=event[0], data=event[1].model_dump(mode="json"), room=room)
+        print(f"📡 Event {event[0]} sent to room {room}")
 
     async def _handle_model_event(self, event: FastAPIEvent[ModelEventBase | DownloadEventBase]) -> None:
         await self._sio.emit(event=event[0], data=event[1].model_dump(mode="json"))
