@@ -226,6 +226,7 @@ class SessionQueueItem(BaseModel):
     session_id: str = Field(
         description="The ID of the session associated with this queue item. The session doesn't exist in graph_executions until the queue item is executed."
     )
+    user_id: Optional[str] = Field(default=None, description="The user ID for multi-user SaaS support.")
     error_type: Optional[str] = Field(default=None, description="The error type if this queue item errored")
     error_message: Optional[str] = Field(default=None, description="The error message if this queue item errored")
     error_traceback: Optional[str] = Field(
@@ -577,7 +578,7 @@ ValueToInsertTuple: TypeAlias = tuple[
 
 
 def prepare_values_to_insert(
-    queue_id: str, batch: Batch, priority: int, max_new_queue_items: int
+    queue_id: str, batch: Batch, priority: int, max_new_queue_items: int, user_id: Optional[str] = None
 ) -> list[ValueToInsertTuple]:
     """
     Given a batch, prepare the values to insert into the session queue table. The list of tuples can be used with an
@@ -588,6 +589,7 @@ def prepare_values_to_insert(
         batch: The batch to prepare the values for
         priority: The priority of the queue items
         max_new_queue_items: The maximum number of queue items to insert
+        user_id: The user ID for multi-user SaaS support.
 
     Returns:
         A list of tuples to insert into the session queue table. Each tuple contains the following values:
@@ -601,6 +603,7 @@ def prepare_values_to_insert(
         - origin (optional)
         - destination (optional)
         - retried_from_item_id (optional, this is always None for new items)
+        - user_id (optional, for multi-user SaaS support)
     """
 
     # A tuple is a fast and memory-efficient way to store the values to insert. Previously, we used a NamedTuple, but
@@ -630,6 +633,7 @@ def prepare_values_to_insert(
                 batch.origin,
                 batch.destination,
                 None,
+                user_id,
             )
         )
     return values_to_insert

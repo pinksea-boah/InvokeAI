@@ -28,7 +28,8 @@ class BoardRecord(BaseModelExcludeNull):
     """Whether or not the board is archived."""
     is_private: Optional[bool] = Field(default=None, description="Whether the board is private.")
     """Whether the board is private."""
-
+    user_id: Optional[str] = Field(default=None, description="The user ID for multi-user SaaS support.")
+    """The user ID for multi-user SaaS support."""
 
 def deserialize_board_record(board_dict: dict) -> BoardRecord:
     """Deserializes a board record."""
@@ -43,7 +44,7 @@ def deserialize_board_record(board_dict: dict) -> BoardRecord:
     deleted_at = board_dict.get("deleted_at", get_iso_timestamp())
     archived = board_dict.get("archived", False)
     is_private = board_dict.get("is_private", False)
-
+    user_id = board_dict.get("user_id", None)
     return BoardRecord(
         board_id=board_id,
         board_name=board_name,
@@ -53,6 +54,7 @@ def deserialize_board_record(board_dict: dict) -> BoardRecord:
         deleted_at=deleted_at,
         archived=archived,
         is_private=is_private,
+        user_id=user_id,
     )
 
 

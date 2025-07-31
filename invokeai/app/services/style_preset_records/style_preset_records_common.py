@@ -43,7 +43,7 @@ class StylePresetWithoutId(BaseModel):
 
 class StylePresetRecordDTO(StylePresetWithoutId):
     id: str = Field(description="The style preset ID.")
-
+    user_id: Optional[str] = Field(description="The user ID for multi-user SaaS support.")
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "StylePresetRecordDTO":
         data["preset_data"] = PresetDataValidator.validate_json(data.get("preset_data", ""))

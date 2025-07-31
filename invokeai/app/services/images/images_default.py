@@ -45,6 +45,7 @@ class ImageService(ImageServiceABC):
         metadata: Optional[str] = None,
         workflow: Optional[str] = None,
         graph: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> ImageDTO:
         if image_origin not in ResourceOrigin:
             raise InvalidOriginException
@@ -72,11 +73,12 @@ class ImageService(ImageServiceABC):
                 node_id=node_id,
                 metadata=metadata,
                 session_id=session_id,
+                user_id=user_id,
             )
             if board_id is not None:
                 try:
                     self.__invoker.services.board_image_records.add_image_to_board(
-                        board_id=board_id, image_name=image_name
+                        board_id=board_id, image_name=image_name, user_id=user_id
                     )
                 except Exception as e:
                     self.__invoker.services.logger.warning(f"Failed to add image to board {board_id}: {str(e)}")
@@ -124,9 +126,9 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error("Problem getting image file")
             raise e
 
-    def get_record(self, image_name: str) -> ImageRecord:
+    def get_record(self, image_name: str, user_id: Optional[str] = None) -> ImageRecord:
         try:
-            return self.__invoker.services.image_records.get(image_name)
+            return self.__invoker.services.image_records.get(image_name, user_id)
         except ImageRecordNotFoundException:
             self.__invoker.services.logger.error("Image record not found")
             raise
@@ -134,9 +136,9 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error("Problem getting image record")
             raise e
 
-    def get_dto(self, image_name: str) -> ImageDTO:
+    def get_dto(self, image_name: str, user_id: Optional[str] = None) -> ImageDTO:
         try:
-            image_record = self.__invoker.services.image_records.get(image_name)
+            image_record = self.__invoker.services.image_records.get(image_name, user_id)
 
             image_dto = image_record_to_dto(
                 image_record=image_record,
@@ -153,9 +155,9 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error("Problem getting image DTO")
             raise e
 
-    def get_metadata(self, image_name: str) -> Optional[MetadataField]:
+    def get_metadata(self, image_name: str, user_id: Optional[str] = None) -> Optional[MetadataField]:
         try:
-            return self.__invoker.services.image_records.get_metadata(image_name)
+            return self.__invoker.services.image_records.get_metadata(image_name, user_id)
         except ImageRecordNotFoundException:
             self.__invoker.services.logger.error("Image record not found")
             raise
@@ -163,9 +165,9 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error("Problem getting image metadata")
             raise e
 
-    def get_workflow(self, image_name: str) -> Optional[str]:
+    def get_workflow(self, image_name: str, user_id: Optional[str] = None) -> Optional[str]:
         try:
-            return self.__invoker.services.image_files.get_workflow(image_name)
+            return self.__invoker.services.image_files.get_workflow(image_name, user_id)
         except ImageFileNotFoundException:
             self.__invoker.services.logger.error("Image file not found")
             raise
@@ -173,9 +175,9 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error("Problem getting image workflow")
             raise
 
-    def get_graph(self, image_name: str) -> Optional[str]:
+    def get_graph(self, image_name: str, user_id: Optional[str] = None) -> Optional[str]:
         try:
-            return self.__invoker.services.image_files.get_graph(image_name)
+            return self.__invoker.services.image_files.get_graph(image_name, user_id)
         except ImageFileNotFoundException:
             self.__invoker.services.logger.error("Image file not found")
             raise
@@ -183,23 +185,23 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error("Problem getting image graph")
             raise
 
-    def get_path(self, image_name: str, thumbnail: bool = False) -> str:
+    def get_path(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> str:
         try:
-            return str(self.__invoker.services.image_files.get_path(image_name, thumbnail))
+            return str(self.__invoker.services.image_files.get_path(image_name, thumbnail, user_id))
         except Exception as e:
             self.__invoker.services.logger.error("Problem getting image path")
             raise e
 
-    def validate_path(self, path: str) -> bool:
+    def validate_path(self, path: str, user_id: Optional[str] = None) -> bool:
         try:
-            return self.__invoker.services.image_files.validate_path(path)
+            return self.__invoker.services.image_files.validate_path(path, user_id)
         except Exception as e:
             self.__invoker.services.logger.error("Problem validating image path")
             raise e
 
-    def get_url(self, image_name: str, thumbnail: bool = False) -> str:
+    def get_url(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> str:
         try:
-            return self.__invoker.services.urls.get_image_url(image_name, thumbnail)
+            return self.__invoker.services.urls.get_image_url(image_name, thumbnail, user_id)
         except Exception as e:
             self.__invoker.services.logger.error("Problem getting image path")
             raise e
@@ -215,6 +217,7 @@ class ImageService(ImageServiceABC):
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
         search_term: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> OffsetPaginatedResults[ImageDTO]:
         try:
             results = self.__invoker.services.image_records.get_many(
@@ -227,6 +230,7 @@ class ImageService(ImageServiceABC):
                 is_intermediate,
                 board_id,
                 search_term,
+                user_id,
             )
 
             image_dtos = [
@@ -249,10 +253,10 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error("Problem getting paginated image DTOs")
             raise e
 
-    def delete(self, image_name: str):
+    def delete(self, image_name: str, user_id: Optional[str] = None):
         try:
-            self.__invoker.services.image_files.delete(image_name)
-            self.__invoker.services.image_records.delete(image_name)
+            self.__invoker.services.image_files.delete(image_name, user_id)
+            self.__invoker.services.image_records.delete(image_name, user_id)
             self._on_deleted(image_name)
         except ImageRecordDeleteException:
             self.__invoker.services.logger.error("Failed to delete image record")
@@ -264,15 +268,16 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error("Problem deleting image record and file")
             raise e
 
-    def delete_images_on_board(self, board_id: str):
+    def delete_images_on_board(self, board_id: str, user_id: Optional[str] = None):
         try:
             image_names = self.__invoker.services.board_image_records.get_all_board_image_names_for_board(
                 board_id,
                 categories=None,
                 is_intermediate=None,
+                user_id=user_id,
             )
             for image_name in image_names:
-                self.__invoker.services.image_files.delete(image_name)
+                self.__invoker.services.image_files.delete(image_name, user_id)
             self.__invoker.services.image_records.delete_many(image_names)
             for image_name in image_names:
                 self._on_deleted(image_name)
@@ -286,12 +291,12 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error(f"Problem deleting image records and files: {str(e)}")
             raise e
 
-    def delete_intermediates(self) -> int:
+    def delete_intermediates(self, user_id: Optional[str] = None) -> int:
         try:
-            image_names = self.__invoker.services.image_records.delete_intermediates()
+            image_names = self.__invoker.services.image_records.delete_intermediates(user_id)
             count = len(image_names)
             for image_name in image_names:
-                self.__invoker.services.image_files.delete(image_name)
+                self.__invoker.services.image_files.delete(image_name, user_id)
                 self._on_deleted(image_name)
             return count
         except ImageRecordDeleteException:
@@ -304,9 +309,9 @@ class ImageService(ImageServiceABC):
             self.__invoker.services.logger.error("Problem deleting image records and files")
             raise e
 
-    def get_intermediates_count(self) -> int:
+    def get_intermediates_count(self, user_id: Optional[str] = None) -> int:
         try:
-            return self.__invoker.services.image_records.get_intermediates_count()
+            return self.__invoker.services.image_records.get_intermediates_count(user_id)
         except Exception as e:
             self.__invoker.services.logger.error("Problem getting intermediates count")
             raise e
@@ -320,6 +325,7 @@ class ImageService(ImageServiceABC):
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
         search_term: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> ImageNamesResult:
         try:
             return self.__invoker.services.image_records.get_image_names(
@@ -330,6 +336,7 @@ class ImageService(ImageServiceABC):
                 is_intermediate=is_intermediate,
                 board_id=board_id,
                 search_term=search_term,
+                user_id=user_id,
             )
         except Exception as e:
             self.__invoker.services.logger.error("Problem getting image names")

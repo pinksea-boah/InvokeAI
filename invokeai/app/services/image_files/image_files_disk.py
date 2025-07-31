@@ -32,9 +32,9 @@ class DiskImageFileStorage(ImageFileStorageBase):
     def start(self, invoker: Invoker) -> None:
         self.__invoker = invoker
 
-    def get(self, image_name: str) -> PILImageType:
+    def get(self, image_name: str, user_id: Optional[str] = None) -> PILImageType:
         try:
-            image_path = self.get_path(image_name)
+            image_path = self.get_path(image_name, user_id=user_id)
 
             cache_item = self.__get_cache(image_path)
             if cache_item:
@@ -54,10 +54,11 @@ class DiskImageFileStorage(ImageFileStorageBase):
         workflow: Optional[str] = None,
         graph: Optional[str] = None,
         thumbnail_size: int = 256,
+        user_id: Optional[str] = None,
     ) -> None:
         try:
             self.__validate_storage_folders()
-            image_path = self.get_path(image_name)
+            image_path = self.get_path(image_name, user_id=user_id)
 
             pnginfo = PngImagePlugin.PngInfo()
             info_dict = {}
@@ -91,9 +92,9 @@ class DiskImageFileStorage(ImageFileStorageBase):
         except Exception as e:
             raise ImageFileSaveException from e
 
-    def delete(self, image_name: str) -> None:
+    def delete(self, image_name: str, user_id: Optional[str] = None) -> None:
         try:
-            image_path = self.get_path(image_name)
+            image_path = self.get_path(image_name, user_id=user_id)
 
             if image_path.exists():
                 image_path.unlink()
@@ -101,7 +102,7 @@ class DiskImageFileStorage(ImageFileStorageBase):
                 del self.__cache[image_path]
 
             thumbnail_name = get_thumbnail_name(image_name)
-            thumbnail_path = self.get_path(thumbnail_name, True)
+            thumbnail_path = self.get_path(thumbnail_name, thumbnail=True, user_id=user_id)
 
             if thumbnail_path.exists():
                 thumbnail_path.unlink()
@@ -110,7 +111,7 @@ class DiskImageFileStorage(ImageFileStorageBase):
         except Exception as e:
             raise ImageFileDeleteException from e
 
-    def get_path(self, image_name: str, thumbnail: bool = False) -> Path:
+    def get_path(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> Path:
         base_folder = self.__thumbnails_folder if thumbnail else self.__output_folder
         filename = get_thumbnail_name(image_name) if thumbnail else image_name
 
@@ -131,20 +132,29 @@ class DiskImageFileStorage(ImageFileStorageBase):
 
         return resolved_image_path
 
-    def validate_path(self, path: Union[str, Path]) -> bool:
+    def get_content(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> bytes:
+        """Gets the content of an image or thumbnail as bytes."""
+        try:
+            path = self.get_path(image_name, thumbnail=thumbnail, user_id=user_id)
+            with open(path, "rb") as f:
+                return f.read()
+        except Exception as e:
+            raise ImageFileNotFoundException from e
+
+    def validate_path(self, path: Union[str, Path], user_id: Optional[str] = None) -> bool:
         """Validates the path given for an image or thumbnail."""
         path = path if isinstance(path, Path) else Path(path)
         return path.exists()
 
-    def get_workflow(self, image_name: str) -> str | None:
-        image = self.get(image_name)
+    def get_workflow(self, image_name: str, user_id: Optional[str] = None) -> str | None:
+        image = self.get(image_name, user_id)
         workflow = image.info.get("invokeai_workflow", None)
         if isinstance(workflow, str):
             return workflow
         return None
 
-    def get_graph(self, image_name: str) -> str | None:
-        image = self.get(image_name)
+    def get_graph(self, image_name: str, user_id: Optional[str] = None) -> str | None:
+        image = self.get(image_name, user_id)
         graph = image.info.get("invokeai_graph", None)
         if isinstance(graph, str):
             return graph

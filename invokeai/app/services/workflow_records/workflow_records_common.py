@@ -103,8 +103,7 @@ class WorkflowRecordDTOBase(BaseModel):
         default=None, description="The opened timestamp of the workflow."
     )
     is_published: bool | None = Field(default=None, description="Whether the workflow is published or not.")
-
-
+    user_id: Optional[str] = Field(default=None, description="The user ID for multi-user SaaS support.")
 class WorkflowRecordDTO(WorkflowRecordDTOBase):
     workflow: Workflow = Field(description="The workflow.")
 

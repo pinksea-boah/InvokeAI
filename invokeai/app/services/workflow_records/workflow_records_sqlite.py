@@ -31,23 +31,23 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
         self._invoker = invoker
         self._sync_default_workflows()
 
-    def get(self, workflow_id: str) -> WorkflowRecordDTO:
+    def get(self, workflow_id: str, with_hash: bool = True, user_id: Optional[str] = None) -> WorkflowRecordDTO:
         """Gets a workflow by ID. Updates the opened_at column."""
         with self._db.transaction() as cursor:
             cursor.execute(
                 """--sql
-                SELECT workflow_id, workflow, name, created_at, updated_at, opened_at
+                SELECT workflow_id, workflow, name, created_at, updated_at, opened_at, user_id
                 FROM workflow_library
-                WHERE workflow_id = ?;
+                WHERE workflow_id = ? AND user_id = ?;
                 """,
-                (workflow_id,),
+                (workflow_id, user_id),
             )
             row = cursor.fetchone()
         if row is None:
             raise WorkflowNotFoundError(f"Workflow with id {workflow_id} not found")
         return WorkflowRecordDTO.from_dict(dict(row))
 
-    def create(self, workflow: WorkflowWithoutID) -> WorkflowRecordDTO:
+    def create(self, workflow: WorkflowWithoutID, user_id: Optional[str] = None) -> WorkflowRecordDTO:
         if workflow.meta.category is WorkflowCategory.Default:
             raise ValueError("Default workflows cannot be created via this method")
 
@@ -57,15 +57,16 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
                 """--sql
                 INSERT OR IGNORE INTO workflow_library (
                     workflow_id,
-                    workflow
+                    workflow,
+                    user_id
                 )
-                VALUES (?, ?);
+                VALUES (?, ?, ?);
                 """,
-                (workflow_with_id.id, workflow_with_id.model_dump_json()),
+                (workflow_with_id.id, workflow_with_id.model_dump_json(), user_id),
             )
-        return self.get(workflow_with_id.id)
+        return self.get(workflow_with_id.id, with_hash=True, user_id=user_id)
 
-    def update(self, workflow: Workflow) -> WorkflowRecordDTO:
+    def update(self, workflow: Workflow, user_id: Optional[str] = None) -> WorkflowRecordDTO:
         if workflow.meta.category is WorkflowCategory.Default:
             raise ValueError("Default workflows cannot be updated")
 
@@ -74,23 +75,23 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
                 """--sql
                 UPDATE workflow_library
                 SET workflow = ?
-                WHERE workflow_id = ? AND category = 'user';
+                WHERE workflow_id = ? AND category = 'user' AND user_id = ?;
                 """,
-                (workflow.model_dump_json(), workflow.id),
+                (workflow.model_dump_json(), workflow.id, user_id),
             )
-        return self.get(workflow.id)
+        return self.get(workflow.id, with_hash=True, user_id=user_id)
 
-    def delete(self, workflow_id: str) -> None:
-        if self.get(workflow_id).workflow.meta.category is WorkflowCategory.Default:
+    def delete(self, workflow_id: str, user_id: Optional[str] = None) -> None:
+        if self.get(workflow_id, with_hash=True, user_id=user_id).workflow.meta.category is WorkflowCategory.Default:
             raise ValueError("Default workflows cannot be deleted")
 
         with self._db.transaction() as cursor:
             cursor.execute(
                 """--sql
                 DELETE from workflow_library
-                WHERE workflow_id = ? AND category = 'user';
+                WHERE workflow_id = ? AND category = 'user' AND user_id = ?;
                 """,
-                (workflow_id,),
+                (workflow_id, user_id),
             )
         return None
 
@@ -105,6 +106,7 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
         tags: Optional[list[str]] = None,
         has_been_opened: Optional[bool] = None,
         is_published: Optional[bool] = None,
+        user_id: Optional[str] = None,
     ) -> PaginatedResults[WorkflowRecordListItemDTO]:
         with self._db.transaction() as cursor:
             # sanitize!
@@ -123,7 +125,8 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
                         created_at,
                         updated_at,
                         opened_at,
-                        tags
+                        tags,   
+                        user_id
                     FROM workflow_library
                     """
             count_query = "SELECT COUNT(*) FROM workflow_library"
@@ -178,6 +181,10 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
                 conditions.append(query_condition)
                 params.extend([wildcard_query, wildcard_query, wildcard_query])
 
+            if user_id:
+                conditions.append("user_id = ?")
+                params.append(user_id)
+
             if conditions:
                 # If there are conditions, add a WHERE clause and then join the conditions
                 main_query += " WHERE "
@@ -228,6 +235,7 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
         categories: Optional[list[WorkflowCategory]] = None,
         has_been_opened: Optional[bool] = None,
         is_published: Optional[bool] = None,
+        user_id: Optional[str] = None,
     ) -> dict[str, int]:
         if not tags:
             return {}
@@ -264,12 +272,13 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
                 stmt = """--sql
                     SELECT COUNT(*)
                     FROM workflow_library
+                    WHERE user_id = ?
                     """
 
                 if conditions:
-                    stmt += " WHERE " + " AND ".join(conditions)
+                    stmt += " AND " + " AND ".join(conditions)
 
-                cursor.execute(stmt, params)
+                cursor.execute(stmt, [user_id] + params)
                 count = cursor.fetchone()[0]
                 result[tag] = count
 
@@ -280,59 +289,64 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
         categories: list[WorkflowCategory],
         has_been_opened: Optional[bool] = None,
         is_published: Optional[bool] = None,
+        user_id: Optional[str] = None,
     ) -> dict[str, int]:
         with self._db.transaction() as cursor:
             result: dict[str, int] = {}
-            # Base conditions for categories
-            base_conditions: list[str] = []
-            base_params: list[str | int] = []
+            
+            # Build base conditions
+            conditions: list[str] = []
+            params: list[str | int] = []
 
             # Add category conditions
             if categories:
                 assert all(c in WorkflowCategory for c in categories)
                 placeholders = ", ".join("?" for _ in categories)
-                base_conditions.append(f"category IN ({placeholders})")
-                base_params.extend([category.value for category in categories])
+                conditions.append(f"category IN ({placeholders})")
+                params.extend([category.value for category in categories])
 
             if has_been_opened:
-                base_conditions.append("opened_at IS NOT NULL")
+                conditions.append("opened_at IS NOT NULL")
             elif has_been_opened is False:
-                base_conditions.append("opened_at IS NULL")
+                conditions.append("opened_at IS NULL")
 
             # For each category to count, run a separate query
             for category in categories:
                 # Start with the base conditions
-                conditions = base_conditions.copy()
-                params = base_params.copy()
+                category_conditions = conditions.copy()
+                category_params = params.copy()
 
-                # Add this specific category condition
-                conditions.append("category = ?")
-                params.append(category.value)
+                # Replace the category IN condition with specific category
+                category_conditions = [c for c in category_conditions if not c.startswith("category IN")]
+                category_params = [p for p in category_params if p != category.value]
+                category_conditions.append("category = ?")
+                category_params.append(category.value)
 
                 # Construct the full query
                 stmt = """--sql
                     SELECT COUNT(*)
                     FROM workflow_library
+                    WHERE user_id = ?
                     """
 
-                if conditions:
-                    stmt += " WHERE " + " AND ".join(conditions)
+                if category_conditions:
+                    stmt += " AND " + " AND ".join(category_conditions)
 
-                cursor.execute(stmt, params)
+                cursor.execute(stmt, [user_id] + category_params)
                 count = cursor.fetchone()[0]
                 result[category.value] = count
 
         return result
 
-    def update_opened_at(self, workflow_id: str) -> None:
+    def update_opened_at(self, workflow_id: str, user_id: Optional[str] = None) -> None:
         with self._db.transaction() as cursor:
             cursor.execute(
                 f"""--sql
                 UPDATE workflow_library
                 SET opened_at = STRFTIME('{SQL_TIME_FORMAT}', 'NOW')
-                WHERE workflow_id = ?;
+                WHERE workflow_id = ? AND user_id = ?;
                 """,
-                (workflow_id,),
+                (workflow_id, user_id),
             )
 
     def _sync_default_workflows(self) -> None:
@@ -369,7 +383,7 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
                 workflows_from_file.append(workflow_from_file)
 
                 try:
-                    workflow_from_db = self.get(workflow_from_file.id).workflow
+                    workflow_from_db = self.get(workflow_from_file.id, user_id=None).workflow
                     if workflow_from_file != workflow_from_db:
                         self._invoker.services.logger.debug(
                             f"Updating library workflow {workflow_from_file.name} ({workflow_from_file.id})"
@@ -409,13 +423,14 @@ class SqliteWorkflowRecordsStorage(WorkflowRecordsStorageBase):
                 # We cannot use the `create` method here, as it only creates non-default workflows
                 cursor.execute(
                     """--sql
-                    INSERT INTO workflow_library (
+                    INSERT OR REPLACE INTO workflow_library (
                         workflow_id,
-                        workflow
+                        workflow,
+                        user_id
                     )
-                    VALUES (?, ?);
+                    VALUES (?, ?, ?);
                     """,
-                    (w.id, w.model_dump_json()),
+                    (w.id, w.model_dump_json(), None),
                 )
 
             for w in workflows_to_update:

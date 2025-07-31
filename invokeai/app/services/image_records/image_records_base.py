@@ -20,12 +20,12 @@ class ImageRecordStorageBase(ABC):
     # TODO: Implement an `update()` method
 
     @abstractmethod
-    def get(self, image_name: str) -> ImageRecord:
+    def get(self, image_name: str, user_id: Optional[str] = None) -> ImageRecord:
         """Gets an image record."""
         pass
 
     @abstractmethod
-    def get_metadata(self, image_name: str) -> Optional[MetadataField]:
+    def get_metadata(self, image_name: str, user_id: Optional[str] = None) -> Optional[MetadataField]:
         """Gets an image's metadata'."""
         pass
 
@@ -34,6 +34,7 @@ class ImageRecordStorageBase(ABC):
         self,
         image_name: str,
         changes: ImageRecordChanges,
+        user_id: Optional[str] = None,
     ) -> None:
         """Updates an image record."""
         pass
@@ -50,6 +51,7 @@ class ImageRecordStorageBase(ABC):
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
         search_term: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> OffsetPaginatedResults[ImageRecord]:
         """Gets a page of image records."""
         pass
@@ -57,22 +59,22 @@ class ImageRecordStorageBase(ABC):
     # TODO: The database has a nullable `deleted_at` column, currently unused.
     # Should we implement soft deletes? Would need coordination with ImageFileStorage.
     @abstractmethod
-    def delete(self, image_name: str) -> None:
+    def delete(self, image_name: str, user_id: Optional[str] = None) -> None:
         """Deletes an image record."""
         pass
 
     @abstractmethod
-    def delete_many(self, image_names: list[str]) -> None:
+    def delete_many(self, image_names: list[str], user_id: Optional[str] = None) -> None:
         """Deletes many image records."""
         pass
 
     @abstractmethod
-    def delete_intermediates(self) -> list[str]:
+    def delete_intermediates(self, user_id: Optional[str] = None) -> list[str]:
         """Deletes all intermediate image records, returning a list of deleted image names."""
         pass
 
     @abstractmethod
-    def get_intermediates_count(self) -> int:
+    def get_intermediates_count(self, user_id: Optional[str] = None) -> int:
         """Gets a count of all intermediate images."""
         pass
 
@@ -90,12 +92,13 @@ class ImageRecordStorageBase(ABC):
         session_id: Optional[str] = None,
         node_id: Optional[str] = None,
         metadata: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> datetime:
         """Saves an image record."""
         pass
 
     @abstractmethod
-    def get_most_recent_image_for_board(self, board_id: str) -> Optional[ImageRecord]:
+    def get_most_recent_image_for_board(self, board_id: str, user_id: Optional[str] = None) -> Optional[ImageRecord]:
         """Gets the most recent image for a board."""
         pass
 
@@ -109,6 +112,7 @@ class ImageRecordStorageBase(ABC):
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
         search_term: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> ImageNamesResult:
         """Gets ordered list of image names with metadata for optimistic updates."""
         pass

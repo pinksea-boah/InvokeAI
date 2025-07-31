@@ -1,3 +1,4 @@
+from typing import Optional
 from invokeai.app.services.board_records.board_records_common import BoardChanges, BoardRecordOrderBy
 from invokeai.app.services.boards.boards_base import BoardServiceABC
 from invokeai.app.services.boards.boards_common import BoardDTO, board_record_to_dto
@@ -15,12 +16,13 @@ class BoardService(BoardServiceABC):
     def create(
         self,
         board_name: str,
+        user_id: Optional[str] = None,
     ) -> BoardDTO:
-        board_record = self.__invoker.services.board_records.save(board_name)
+        board_record = self.__invoker.services.board_records.save(board_name, user_id)
         return board_record_to_dto(board_record, None, 0)
 
-    def get_dto(self, board_id: str) -> BoardDTO:
-        board_record = self.__invoker.services.board_records.get(board_id)
+    def get_dto(self, board_id: str, user_id: Optional[str] = None) -> BoardDTO:
+        board_record = self.__invoker.services.board_records.get(board_id, user_id)
         cover_image = self.__invoker.services.image_records.get_most_recent_image_for_board(board_record.board_id)
         if cover_image:
             cover_image_name = cover_image.image_name
@@ -33,8 +35,9 @@ class BoardService(BoardServiceABC):
         self,
         board_id: str,
         changes: BoardChanges,
+        user_id: Optional[str] = None,
     ) -> BoardDTO:
-        board_record = self.__invoker.services.board_records.update(board_id, changes)
+        board_record = self.__invoker.services.board_records.update(board_id, changes, user_id)
         cover_image = self.__invoker.services.image_records.get_most_recent_image_for_board(board_record.board_id)
         if cover_image:
             cover_image_name = cover_image.image_name
@@ -44,8 +47,8 @@ class BoardService(BoardServiceABC):
         image_count = self.__invoker.services.board_image_records.get_image_count_for_board(board_id)
         return board_record_to_dto(board_record, cover_image_name, image_count)
 
-    def delete(self, board_id: str) -> None:
-        self.__invoker.services.board_records.delete(board_id)
+    def delete(self, board_id: str, user_id: Optional[str] = None) -> None:
+        self.__invoker.services.board_records.delete(board_id, user_id)
 
     def get_many(
         self,
@@ -54,9 +57,10 @@ class BoardService(BoardServiceABC):
         offset: int = 0,
         limit: int = 10,
         include_archived: bool = False,
+        user_id: Optional[str] = None,
     ) -> OffsetPaginatedResults[BoardDTO]:
         board_records = self.__invoker.services.board_records.get_many(
-            order_by, direction, offset, limit, include_archived
+            order_by, direction, offset, limit, include_archived, user_id
         )
         board_dtos = []
         for r in board_records.items:
@@ -72,9 +76,9 @@ class BoardService(BoardServiceABC):
         return OffsetPaginatedResults[BoardDTO](items=board_dtos, offset=offset, limit=limit, total=len(board_dtos))
 
     def get_all(
-        self, order_by: BoardRecordOrderBy, direction: SQLiteDirection, include_archived: bool = False
+        self, order_by: BoardRecordOrderBy, direction: SQLiteDirection, include_archived: bool = False, user_id: Optional[str] = None,
     ) -> list[BoardDTO]:
-        board_records = self.__invoker.services.board_records.get_all(order_by, direction, include_archived)
+        board_records = self.__invoker.services.board_records.get_all(order_by, direction, include_archived, user_id)
         board_dtos = []
         for r in board_records:
             cover_image = self.__invoker.services.image_records.get_most_recent_image_for_board(r.board_id)

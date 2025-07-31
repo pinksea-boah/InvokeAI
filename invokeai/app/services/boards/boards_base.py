@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from invokeai.app.services.board_records.board_records_common import BoardChanges, BoardRecordOrderBy
 from invokeai.app.services.boards.boards_common import BoardDTO
@@ -13,6 +14,7 @@ class BoardServiceABC(ABC):
     def create(
         self,
         board_name: str,
+        user_id: Optional[str] = None,
     ) -> BoardDTO:
         """Creates a board."""
         pass
@@ -21,6 +23,7 @@ class BoardServiceABC(ABC):
     def get_dto(
         self,
         board_id: str,
+        user_id: Optional[str] = None,
     ) -> BoardDTO:
         """Gets a board."""
         pass
@@ -30,6 +33,7 @@ class BoardServiceABC(ABC):
         self,
         board_id: str,
         changes: BoardChanges,
+        user_id: Optional[str] = None,
     ) -> BoardDTO:
         """Updates a board."""
         pass
@@ -38,6 +42,7 @@ class BoardServiceABC(ABC):
     def delete(
         self,
         board_id: str,
+        user_id: Optional[str] = None,
     ) -> None:
         """Deletes a board."""
         pass
@@ -50,13 +55,14 @@ class BoardServiceABC(ABC):
         offset: int = 0,
         limit: int = 10,
         include_archived: bool = False,
+        user_id: Optional[str] = None,
     ) -> OffsetPaginatedResults[BoardDTO]:
         """Gets many boards."""
         pass
 
     @abstractmethod
     def get_all(
-        self, order_by: BoardRecordOrderBy, direction: SQLiteDirection, include_archived: bool = False
+        self, order_by: BoardRecordOrderBy, direction: SQLiteDirection, include_archived: bool = False, user_id: Optional[str] = None,
     ) -> list[BoardDTO]:
         """Gets all boards."""
         pass

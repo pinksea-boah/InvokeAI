@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from PIL import Image
 from PIL.Image import Image as PILImageType
@@ -23,40 +24,48 @@ class WorkflowThumbnailFileStorageDisk(WorkflowThumbnailServiceBase):
     def start(self, invoker: Invoker) -> None:
         self._invoker = invoker
 
-    def get(self, workflow_id: str) -> PILImageType:
+    def get(self, workflow_id: str, user_id: Optional[str] = None) -> PILImageType:
         try:
-            path = self.get_path(workflow_id)
+            path = self.get_path(workflow_id, with_hash=False, user_id=user_id)
 
             return Image.open(path)
         except FileNotFoundError as e:
             raise WorkflowThumbnailFileNotFoundException from e
 
-    def save(self, workflow_id: str, image: PILImageType) -> None:
+    def save(self, workflow_id: str, image: PILImageType, user_id: Optional[str] = None) -> None:
         try:
             self._validate_storage_folders()
-            image_path = self._workflow_thumbnail_folder / (workflow_id + ".webp")
+            image_path = self.get_path(workflow_id, with_hash=False, user_id=user_id)
+            # Ensure the directory exists
+            image_path.parent.mkdir(parents=True, exist_ok=True)
             thumbnail = make_thumbnail(image, 256)
             thumbnail.save(image_path, format="webp")
 
         except Exception as e:
             raise WorkflowThumbnailFileSaveException from e
 
-    def get_path(self, workflow_id: str, with_hash: bool = True) -> Path:
-        workflow = self._invoker.services.workflow_records.get(workflow_id).workflow
+    def get_path(self, workflow_id: str, with_hash: bool = True, user_id: Optional[str] = None) -> Path:
+        workflow = self._invoker.services.workflow_records.get(workflow_id, with_hash=with_hash, user_id=user_id).workflow
         if workflow.meta.category is WorkflowCategory.Default:
             default_thumbnails_dir = Path(__file__).parent / Path("default_workflow_thumbnails")
             path = default_thumbnails_dir / (workflow_id + ".png")
         else:
-            path = self._workflow_thumbnail_folder / (workflow_id + ".webp")
+            # For user-specific workflows, include user_id in the path if provided
+            if user_id is not None:
+                user_folder = self._workflow_thumbnail_folder / user_id
+                user_folder.mkdir(parents=True, exist_ok=True)
+                path = user_folder / (workflow_id + ".webp")
+            else:
+                path = self._workflow_thumbnail_folder / (workflow_id + ".webp")
 
         return path
 
-    def get_url(self, workflow_id: str, with_hash: bool = True) -> str | None:
-        path = self.get_path(workflow_id)
+    def get_url(self, workflow_id: str, with_hash: bool = True, user_id: Optional[str] = None) -> str | None:
+        path = self.get_path(workflow_id, with_hash, user_id)
         if not self._validate_path(path):
             return
 
-        url = self._invoker.services.urls.get_workflow_thumbnail_url(workflow_id)
+        url = self._invoker.services.urls.get_workflow_thumbnail_url(workflow_id, user_id)
 
         # The image URL never changes, so we must add random query string to it to prevent caching
         if with_hash:
@@ -64,9 +73,9 @@ class WorkflowThumbnailFileStorageDisk(WorkflowThumbnailServiceBase):
 
         return url
 
-    def delete(self, workflow_id: str) -> None:
+    def delete(self, workflow_id: str, user_id: Optional[str] = None) -> None:
         try:
-            path = self.get_path(workflow_id)
+            path = self.get_path(workflow_id, with_hash=False, user_id=user_id)
 
             if not self._validate_path(path):
                 raise WorkflowThumbnailFileNotFoundException

@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 
 class UrlServiceBase(ABC):
     """Responsible for building URLs for resources."""
 
     @abstractmethod
-    def get_image_url(self, image_name: str, thumbnail: bool = False) -> str:
+    def get_image_url(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> str:
         """Gets the URL for an image or thumbnail."""
         pass
 
@@ -20,6 +21,6 @@ class UrlServiceBase(ABC):
         pass
 
     @abstractmethod
-    def get_workflow_thumbnail_url(self, workflow_id: str) -> str:
+    def get_workflow_thumbnail_url(self, workflow_id: str, user_id: Optional[str] = None) -> str:
         """Gets the URL for a workflow thumbnail"""
         pass

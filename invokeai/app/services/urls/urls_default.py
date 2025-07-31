@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from invokeai.app.services.urls.urls_base import UrlServiceBase
 
@@ -8,7 +9,7 @@ class LocalUrlService(UrlServiceBase):
         self._base_url = base_url
         self._base_url_v2 = base_url_v2
 
-    def get_image_url(self, image_name: str, thumbnail: bool = False) -> str:
+    def get_image_url(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> str:
         image_basename = os.path.basename(image_name)
 
         # These paths are determined by the routes in invokeai/app/api/routers/images.py
@@ -23,5 +24,5 @@ class LocalUrlService(UrlServiceBase):
     def get_style_preset_image_url(self, style_preset_id: str) -> str:
         return f"{self._base_url}/style_presets/i/{style_preset_id}/image"
 
-    def get_workflow_thumbnail_url(self, workflow_id: str) -> str:
+    def get_workflow_thumbnail_url(self, workflow_id: str, user_id: Optional[str] = None) -> str:
         return f"{self._base_url}/workflows/i/{workflow_id}/thumbnail"
