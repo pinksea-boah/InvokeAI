@@ -55,6 +55,7 @@ class ImageServiceABC(ABC):
         metadata: Optional[str] = None,
         workflow: Optional[str] = None,
         graph: Optional[str] = None,
+        user_id: Optional[str] = None, 
     ) -> ImageDTO:
         """Creates an image, storing the file and its metadata."""
         pass
@@ -74,42 +75,42 @@ class ImageServiceABC(ABC):
         pass
 
     @abstractmethod
-    def get_record(self, image_name: str) -> ImageRecord:
+    def get_record(self, image_name: str, user_id: Optional[str] = None) -> ImageRecord:
         """Gets an image record."""
         pass
 
     @abstractmethod
-    def get_dto(self, image_name: str) -> ImageDTO:
+    def get_dto(self, image_name: str, user_id: Optional[str] = None) -> ImageDTO:
         """Gets an image DTO."""
         pass
 
     @abstractmethod
-    def get_metadata(self, image_name: str) -> Optional[MetadataField]:
+    def get_metadata(self, image_name: str, user_id: Optional[str] = None) -> Optional[MetadataField]:
         """Gets an image's metadata."""
         pass
 
     @abstractmethod
-    def get_workflow(self, image_name: str) -> Optional[str]:
+    def get_workflow(self, image_name: str, user_id: Optional[str] = None) -> Optional[str]:
         """Gets an image's workflow."""
         pass
 
     @abstractmethod
-    def get_graph(self, image_name: str) -> Optional[str]:
+    def get_graph(self, image_name: str, user_id: Optional[str] = None) -> Optional[str]:
         """Gets an image's workflow."""
         pass
 
     @abstractmethod
-    def get_path(self, image_name: str, thumbnail: bool = False) -> str:
+    def get_path(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> str:
         """Gets an image's path."""
         pass
 
     @abstractmethod
-    def validate_path(self, path: str) -> bool:
+    def validate_path(self, path: str, user_id: Optional[str] = None) -> bool:
         """Validates an image's path."""
         pass
 
     @abstractmethod
-    def get_url(self, image_name: str, thumbnail: bool = False) -> str:
+    def get_url(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> str:
         """Gets an image's or thumbnail's URL."""
         pass
 
@@ -125,22 +126,23 @@ class ImageServiceABC(ABC):
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
         search_term: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> OffsetPaginatedResults[ImageDTO]:
         """Gets a paginated list of image DTOs with starred images first when starred_first=True."""
         pass
 
     @abstractmethod
-    def delete(self, image_name: str):
+    def delete(self, image_name: str, user_id: Optional[str] = None):
         """Deletes an image."""
         pass
 
     @abstractmethod
-    def delete_intermediates(self) -> int:
+    def delete_intermediates(self, user_id: Optional[str] = None) -> int:
         """Deletes all intermediate images."""
         pass
 
     @abstractmethod
-    def get_intermediates_count(self) -> int:
+    def get_intermediates_count(self, user_id: Optional[str] = None) -> int:
         """Gets the number of intermediate images."""
         pass
 
@@ -153,12 +155,13 @@ class ImageServiceABC(ABC):
     def get_image_names(
         self,
         starred_first: bool = True,
-        order_dir: SQLiteDirection = SQLiteDirection.Descending,
+        order_dir: SQLiteDirection = SQLiteDirection.Descending,    
         image_origin: Optional[ResourceOrigin] = None,
         categories: Optional[list[ImageCategory]] = None,
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
         search_term: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> ImageNamesResult:
         """Gets ordered list of image names with metadata for optimistic updates."""
         pass

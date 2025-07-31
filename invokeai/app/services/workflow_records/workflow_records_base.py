@@ -17,17 +17,17 @@ class WorkflowRecordsStorageBase(ABC):
     """Base class for workflow storage services."""
 
     @abstractmethod
-    def get(self, workflow_id: str) -> WorkflowRecordDTO:
+    def get(self, workflow_id: str, with_hash: bool = True, user_id: Optional[str] = None) -> WorkflowRecordDTO:
         """Get workflow by id."""
         pass
 
     @abstractmethod
-    def create(self, workflow: WorkflowWithoutID) -> WorkflowRecordDTO:
+    def create(self, workflow: WorkflowWithoutID, user_id: Optional[str] = None) -> WorkflowRecordDTO:
         """Creates a workflow."""
         pass
 
     @abstractmethod
-    def update(self, workflow: Workflow) -> WorkflowRecordDTO:
+    def update(self, workflow: Workflow, user_id: Optional[str] = None) -> WorkflowRecordDTO:
         """Updates a workflow."""
         pass
 
@@ -48,6 +48,7 @@ class WorkflowRecordsStorageBase(ABC):
         tags: Optional[list[str]],
         has_been_opened: Optional[bool],
         is_published: Optional[bool],
+        user_id: Optional[str] = None,
     ) -> PaginatedResults[WorkflowRecordListItemDTO]:
         """Gets many workflows."""
         pass
@@ -58,6 +59,7 @@ class WorkflowRecordsStorageBase(ABC):
         categories: list[WorkflowCategory],
         has_been_opened: Optional[bool] = None,
         is_published: Optional[bool] = None,
+        user_id: Optional[str] = None,
     ) -> dict[str, int]:
         """Gets a dictionary of counts for each of the provided categories."""
         pass
@@ -69,11 +71,12 @@ class WorkflowRecordsStorageBase(ABC):
         categories: Optional[list[WorkflowCategory]] = None,
         has_been_opened: Optional[bool] = None,
         is_published: Optional[bool] = None,
+        user_id: Optional[str] = None,
     ) -> dict[str, int]:
         """Gets a dictionary of counts for each of the provided tags."""
         pass
 
     @abstractmethod
-    def update_opened_at(self, workflow_id: str) -> None:
+    def update_opened_at(self, workflow_id: str, user_id: Optional[str] = None) -> None:
         """Open a workflow."""
         pass

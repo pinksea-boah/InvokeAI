@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Union, cast
+from typing import Union, cast, Optional
 
 from invokeai.app.services.board_records.board_records_base import BoardRecordStorageBase
 from invokeai.app.services.board_records.board_records_common import (
@@ -22,15 +22,15 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
         super().__init__()
         self._db = db
 
-    def delete(self, board_id: str) -> None:
+    def delete(self, board_id: str, user_id: Optional[str] = None) -> None:
         with self._db.transaction() as cursor:
             try:
                 cursor.execute(
                     """--sql
                     DELETE FROM boards
-                    WHERE board_id = ?;
+                    WHERE board_id = ? AND user_id = ?;
                     """,
-                    (board_id,),
+                    (board_id, user_id),
                 )
             except Exception as e:
                 raise BoardRecordDeleteException from e
@@ -38,16 +38,17 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
     def save(
         self,
         board_name: str,
+        user_id: Optional[str] = None,
     ) -> BoardRecord:
         with self._db.transaction() as cursor:
             try:
                 board_id = uuid_string()
                 cursor.execute(
                     """--sql
-                    INSERT OR IGNORE INTO boards (board_id, board_name)
-                    VALUES (?, ?);
+                    INSERT OR IGNORE INTO boards (board_id, board_name, user_id)
+                    VALUES (?, ?, ?);
                     """,
-                    (board_id, board_name),
+                    (board_id, board_name, user_id),
                 )
             except sqlite3.Error as e:
                 raise BoardRecordSaveException from e
@@ -56,6 +57,7 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
     def get(
         self,
         board_id: str,
+        user_id: Optional[str] = None,
     ) -> BoardRecord:
         with self._db.transaction() as cursor:
             try:
@@ -63,9 +65,9 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                     """--sql
                     SELECT *
                     FROM boards
-                    WHERE board_id = ?;
+                    WHERE board_id = ? AND user_id = ?;
                     """,
-                    (board_id,),
+                    (board_id, user_id),
                 )
 
                 result = cast(Union[sqlite3.Row, None], cursor.fetchone())
@@ -79,6 +81,7 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
         self,
         board_id: str,
         changes: BoardChanges,
+        user_id: Optional[str] = None,
     ) -> BoardRecord:
         with self._db.transaction() as cursor:
             try:
@@ -88,9 +91,9 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                         """--sql
                         UPDATE boards
                         SET board_name = ?
-                        WHERE board_id = ?;
+                        WHERE board_id = ? AND user_id = ?;
                         """,
-                        (changes.board_name, board_id),
+                        (changes.board_name, board_id, user_id),
                     )
 
                 # Change the cover image of a board
@@ -99,9 +102,9 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                         """--sql
                         UPDATE boards
                         SET cover_image_name = ?
-                        WHERE board_id = ?;
+                        WHERE board_id = ? AND user_id = ?;
                         """,
-                        (changes.cover_image_name, board_id),
+                        (changes.cover_image_name, board_id, user_id),
                     )
 
                 # Change the archived status of a board
@@ -110,9 +113,9 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                         """--sql
                         UPDATE boards
                         SET archived = ?
-                        WHERE board_id = ?;
+                        WHERE board_id = ? AND user_id = ?;
                         """,
-                        (changes.archived, board_id),
+                        (changes.archived, board_id, user_id),
                     )
 
             except sqlite3.Error as e:
@@ -126,26 +129,30 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
         offset: int = 0,
         limit: int = 10,
         include_archived: bool = False,
+        user_id: Optional[str] = None,
     ) -> OffsetPaginatedResults[BoardRecord]:
         with self._db.transaction() as cursor:
             # Build base query
             base_query = """
                     SELECT *
                     FROM boards
-                    {archived_filter}
+                    {where_clause}
                     ORDER BY {order_by} {direction}
                     LIMIT ? OFFSET ?;
                 """
 
-            # Determine archived filter condition
-            archived_filter = "" if include_archived else "WHERE archived = 0"
+            # Determine where clause
+            if include_archived:
+                where_clause = "WHERE user_id = ?"
+            else:
+                where_clause = "WHERE archived = 0 AND user_id = ?"
 
             final_query = base_query.format(
-                archived_filter=archived_filter, order_by=order_by.value, direction=direction.value
+                where_clause=where_clause, order_by=order_by.value, direction=direction.value
             )
 
             # Execute query to fetch boards
-            cursor.execute(final_query, (limit, offset))
+            cursor.execute(final_query, (user_id, limit, offset))
 
             result = cast(list[sqlite3.Row], cursor.fetchall())
             boards = [deserialize_board_record(dict(r)) for r in result]
@@ -154,48 +161,52 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
             if include_archived:
                 count_query = """
                         SELECT COUNT(*)
-                        FROM boards;
+                        FROM boards
+                        WHERE user_id = ?;
                     """
             else:
                 count_query = """
                         SELECT COUNT(*)
                         FROM boards
-                        WHERE archived = 0;
+                        WHERE archived = 0 AND user_id = ?;
                     """
 
             # Execute count query
-            cursor.execute(count_query)
+            cursor.execute(count_query, (user_id,))
 
             count = cast(int, cursor.fetchone()[0])
 
         return OffsetPaginatedResults[BoardRecord](items=boards, offset=offset, limit=limit, total=count)
 
     def get_all(
-        self, order_by: BoardRecordOrderBy, direction: SQLiteDirection, include_archived: bool = False
+        self, order_by: BoardRecordOrderBy, direction: SQLiteDirection, include_archived: bool = False, user_id: Optional[str] = None,
     ) -> list[BoardRecord]:
         with self._db.transaction() as cursor:
             if order_by == BoardRecordOrderBy.Name:
                 base_query = """
                         SELECT *
                         FROM boards
-                        {archived_filter}
+                        {where_clause}
                         ORDER BY LOWER(board_name) {direction}
                     """
             else:
                 base_query = """
                         SELECT *
                         FROM boards
-                        {archived_filter}
+                        {where_clause}
                         ORDER BY {order_by} {direction}
                     """
 
-            archived_filter = "" if include_archived else "WHERE archived = 0"
+            if include_archived:
+                where_clause = "WHERE user_id = ?"
+            else:
+                where_clause = "WHERE archived = 0 AND user_id = ?"
 
             final_query = base_query.format(
-                archived_filter=archived_filter, order_by=order_by.value, direction=direction.value
+                where_clause=where_clause, order_by=order_by.value, direction=direction.value
             )
 
-            cursor.execute(final_query)
+            cursor.execute(final_query, (user_id,))
 
             result = cast(list[sqlite3.Row], cursor.fetchall())
         boards = [deserialize_board_record(dict(r)) for r in result]

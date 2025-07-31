@@ -58,6 +58,8 @@ class EventServiceBase:
 
     def emit_invocation_started(self, queue_item: "SessionQueueItem", invocation: "BaseInvocation") -> None:
         """Emitted when an invocation is started"""
+        # 디버깅: invocation 시작 이벤트 발생 로깅
+        print(f"🚀 Backend: Invocation started - Queue Item: {queue_item.item_id}")
         self.dispatch(InvocationStartedEvent.build(queue_item, invocation))
 
     def emit_invocation_progress(
@@ -69,6 +71,9 @@ class EventServiceBase:
         image: "ProgressImage | None" = None,
     ) -> None:
         """Emitted at periodically during an invocation"""
+        # 디버깅: invocation 진행률 이벤트 발생 로깅
+        progress_text = f"{percentage * 100:.1f}%" if percentage else "N/A"
+        print(f"📊 Backend: Invocation progress - Queue Item: {queue_item.item_id}, Progress: {progress_text}, Message: {message}")
         self.dispatch(InvocationProgressEvent.build(queue_item, invocation, message, percentage, image))
 
     def emit_invocation_complete(
@@ -86,6 +91,8 @@ class EventServiceBase:
         error_traceback: str,
     ) -> None:
         """Emitted when an invocation encounters an error"""
+        # 디버깅: invocation 에러 이벤트 발생 로깅
+        print(f"❌ Backend: Invocation error - Queue Item: {queue_item.item_id}, Error Type: {error_type}, Message: {error_message}")
         self.dispatch(InvocationErrorEvent.build(queue_item, invocation, error_type, error_message, error_traceback))
 
     # endregion
@@ -96,6 +103,8 @@ class EventServiceBase:
         self, queue_item: "SessionQueueItem", batch_status: "BatchStatus", queue_status: "SessionQueueStatus"
     ) -> None:
         """Emitted when a queue item's status changes"""
+        # 디버깅: 상태 변경 이벤트 발생 로깅
+        print(f"🔄 Backend: Queue item {queue_item.item_id} status changed to {queue_item.status}")
         self.dispatch(QueueItemStatusChangedEvent.build(queue_item, batch_status, queue_status))
 
     def emit_batch_enqueued(self, enqueue_result: "EnqueueBatchResult") -> None:

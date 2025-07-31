@@ -12,6 +12,7 @@ class BoardImageRecordStorageBase(ABC):
         self,
         board_id: str,
         image_name: str,
+        user_id: Optional[str] = None,
     ) -> None:
         """Adds an image to a board."""
         pass
@@ -20,6 +21,7 @@ class BoardImageRecordStorageBase(ABC):
     def remove_image_from_board(
         self,
         image_name: str,
+        user_id: Optional[str] = None,
     ) -> None:
         """Removes an image from a board."""
         pass
@@ -30,6 +32,7 @@ class BoardImageRecordStorageBase(ABC):
         board_id: str,
         categories: list[ImageCategory] | None,
         is_intermediate: bool | None,
+        user_id: Optional[str] = None,
     ) -> list[str]:
         """Gets all board images for a board, as a list of the image names."""
         pass
@@ -38,6 +41,7 @@ class BoardImageRecordStorageBase(ABC):
     def get_board_for_image(
         self,
         image_name: str,
+        user_id: Optional[str] = None,
     ) -> Optional[str]:
         """Gets an image's board id, if it has one."""
         pass
@@ -46,6 +50,7 @@ class BoardImageRecordStorageBase(ABC):
     def get_image_count_for_board(
         self,
         board_id: str,
+        user_id: Optional[str] = None,
     ) -> int:
         """Gets the number of images for a board."""
         pass

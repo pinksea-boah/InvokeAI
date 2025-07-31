@@ -26,7 +26,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
         super().__init__()
         self._db = db
 
-    def get(self, image_name: str) -> ImageRecord:
+    def get(self, image_name: str, user_id: Optional[str] = None) -> ImageRecord:
         with self._db.transaction() as cursor:
             try:
                 cursor.execute(
@@ -46,7 +46,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
 
         return deserialize_image_record(dict(result))
 
-    def get_metadata(self, image_name: str) -> Optional[MetadataField]:
+    def get_metadata(self, image_name: str, user_id: Optional[str] = None) -> Optional[MetadataField]:
         with self._db.transaction() as cursor:
             try:
                 cursor.execute(
@@ -73,6 +73,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
         self,
         image_name: str,
         changes: ImageRecordChanges,
+        user_id: Optional[str] = None,
     ) -> None:
         with self._db.transaction() as cursor:
             try:
@@ -134,6 +135,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
         search_term: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> OffsetPaginatedResults[ImageRecord]:
         with self._db.transaction() as cursor:
             # Manually build two queries - one for the count, one for the records
@@ -233,7 +235,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
 
         return OffsetPaginatedResults(items=images, offset=offset, limit=limit, total=count)
 
-    def delete(self, image_name: str) -> None:
+    def delete(self, image_name: str, user_id: Optional[str] = None) -> None:
         with self._db.transaction() as cursor:
             try:
                 cursor.execute(
@@ -246,7 +248,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
             except sqlite3.Error as e:
                 raise ImageRecordDeleteException from e
 
-    def delete_many(self, image_names: list[str]) -> None:
+    def delete_many(self, image_names: list[str], user_id: Optional[str] = None) -> None:
         with self._db.transaction() as cursor:
             try:
                 placeholders = ",".join("?" for _ in image_names)
@@ -260,7 +262,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
             except sqlite3.Error as e:
                 raise ImageRecordDeleteException from e
 
-    def get_intermediates_count(self) -> int:
+    def get_intermediates_count(self, user_id: Optional[str] = None) -> int:
         with self._db.transaction() as cursor:
             cursor.execute(
                 """--sql
@@ -271,7 +273,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
             count = cast(int, cursor.fetchone()[0])
         return count
 
-    def delete_intermediates(self) -> list[str]:
+    def delete_intermediates(self, user_id: Optional[str] = None) -> list[str]:
         with self._db.transaction() as cursor:
             try:
                 cursor.execute(
@@ -305,6 +307,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
         session_id: Optional[str] = None,
         node_id: Optional[str] = None,
         metadata: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> datetime:
         with self._db.transaction() as cursor:
             try:
@@ -321,9 +324,10 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
                         metadata,
                         is_intermediate,
                         starred,
-                        has_workflow
+                        has_workflow,
+                        user_id
                         )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
                     (
                         image_name,
@@ -337,6 +341,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
                         is_intermediate,
                         starred,
                         has_workflow,
+                        user_id,
                     ),
                 )
 
@@ -355,7 +360,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
                 raise ImageRecordSaveException from e
         return created_at
 
-    def get_most_recent_image_for_board(self, board_id: str) -> Optional[ImageRecord]:
+    def get_most_recent_image_for_board(self, board_id: str, user_id: Optional[str] = None) -> Optional[ImageRecord]:
         with self._db.transaction() as cursor:
             cursor.execute(
                 """--sql
@@ -386,7 +391,8 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
         search_term: Optional[str] = None,
-    ) -> ImageNamesResult:
+        user_id: Optional[str] = None,
+        ) -> ImageNamesResult:
         with self._db.transaction() as cursor:
             # Build query conditions (reused for both starred count and image names queries)
             query_conditions = ""
@@ -432,6 +438,12 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
                 """
                 query_params.append(f"%{search_term.lower()}%")
                 query_params.append(f"%{search_term.lower()}%")
+
+            if user_id is not None:
+                query_conditions += """--sql
+                AND images.user_id = ?
+                """
+                query_params.append(user_id)
 
             # Get starred count if starred_first is enabled
             starred_count = 0

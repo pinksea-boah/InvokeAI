@@ -106,6 +106,7 @@ IMAGE_DTO_COLS = ", ".join(
             "updated_at",
             "deleted_at",
             "starred",
+            "user_id",
         ]
     ]
 )
@@ -147,7 +148,9 @@ class ImageRecord(BaseModelExcludeNull):
     starred: bool = Field(description="Whether this image is starred.")
     """Whether this image is starred."""
     has_workflow: bool = Field(description="Whether this image has a workflow.")
-
+    """Whether this image has a workflow."""
+    user_id: Optional[str] = Field(default=None, description="The user ID for multi-user SaaS support.")
+    """The user ID for multi-user SaaS support."""
 
 class ImageRecordChanges(BaseModelExcludeNull, extra="allow"):
     """A set of changes to apply to an image record.
@@ -191,6 +194,7 @@ def deserialize_image_record(image_dict: dict) -> ImageRecord:
     is_intermediate = image_dict.get("is_intermediate", False)
     starred = image_dict.get("starred", False)
     has_workflow = image_dict.get("has_workflow", False)
+    user_id = image_dict.get("user_id", None)
 
     return ImageRecord(
         image_name=image_name,
@@ -206,6 +210,7 @@ def deserialize_image_record(image_dict: dict) -> ImageRecord:
         is_intermediate=is_intermediate,
         starred=starred,
         has_workflow=has_workflow,
+        user_id=user_id,
     )
 
 

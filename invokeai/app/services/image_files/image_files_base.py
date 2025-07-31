@@ -9,19 +9,24 @@ class ImageFileStorageBase(ABC):
     """Low-level service responsible for storing and retrieving image files."""
 
     @abstractmethod
-    def get(self, image_name: str) -> PILImageType:
+    def get(self, image_name: str, user_id: Optional[str] = None) -> PILImageType:
         """Retrieves an image as PIL Image."""
         pass
 
     @abstractmethod
-    def get_path(self, image_name: str, thumbnail: bool = False) -> Path:
+    def get_path(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> Path:
         """Gets the internal path to an image or thumbnail."""
+        pass
+
+    @abstractmethod
+    def get_content(self, image_name: str, thumbnail: bool = False, user_id: Optional[str] = None) -> bytes:
+        """Gets the content of an image or thumbnail as bytes."""
         pass
 
     # TODO: We need to validate paths before starlette makes the FileResponse, else we get a
     # 500 internal server error. I don't like having this method on the service.
     @abstractmethod
-    def validate_path(self, path: str) -> bool:
+    def validate_path(self, path: str, user_id: Optional[str] = None) -> bool:
         """Validates the path given for an image or thumbnail."""
         pass
 
@@ -34,21 +39,22 @@ class ImageFileStorageBase(ABC):
         workflow: Optional[str] = None,
         graph: Optional[str] = None,
         thumbnail_size: int = 256,
+        user_id: Optional[str] = None,
     ) -> None:
         """Saves an image and a 256x256 WEBP thumbnail. Returns a tuple of the image name, thumbnail name, and created timestamp."""
         pass
 
     @abstractmethod
-    def delete(self, image_name: str) -> None:
+    def delete(self, image_name: str, user_id: Optional[str] = None) -> None:
         """Deletes an image and its thumbnail (if one exists)."""
         pass
 
     @abstractmethod
-    def get_workflow(self, image_name: str) -> Optional[str]:
+    def get_workflow(self, image_name: str, user_id: Optional[str] = None) -> Optional[str]:
         """Gets the workflow of an image."""
         pass
 
     @abstractmethod
-    def get_graph(self, image_name: str) -> Optional[str]:
+    def get_graph(self, image_name: str, user_id: Optional[str] = None) -> Optional[str]:
         """Gets the graph of an image."""
         pass

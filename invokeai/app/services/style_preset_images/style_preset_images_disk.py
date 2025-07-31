@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from PIL import Image
 from PIL.Image import Image as PILImageType
@@ -25,15 +26,15 @@ class StylePresetImageFileStorageDisk(StylePresetImageFileStorageBase):
     def start(self, invoker: Invoker) -> None:
         self._invoker = invoker
 
-    def get(self, style_preset_id: str) -> PILImageType:
+    def get(self, style_preset_id: str, user_id: Optional[str] = None) -> PILImageType:
         try:
-            path = self.get_path(style_preset_id)
+            path = self.get_path(style_preset_id, user_id=user_id)
 
             return Image.open(path)
         except FileNotFoundError as e:
             raise StylePresetImageFileNotFoundException from e
 
-    def save(self, style_preset_id: str, image: PILImageType) -> None:
+    def save(self, style_preset_id: str, image: PILImageType, user_id: Optional[str] = None) -> None:
         try:
             self._validate_storage_folders()
             image_path = self._style_preset_images_folder / (style_preset_id + ".webp")
@@ -43,8 +44,8 @@ class StylePresetImageFileStorageDisk(StylePresetImageFileStorageBase):
         except Exception as e:
             raise StylePresetImageFileSaveException from e
 
-    def get_path(self, style_preset_id: str) -> Path:
-        style_preset = self._invoker.services.style_preset_records.get(style_preset_id)
+    def get_path(self, style_preset_id: str, user_id: Optional[str] = None) -> Path:
+        style_preset = self._invoker.services.style_preset_records.get(style_preset_id, user_id=user_id)
         if style_preset.type is PresetType.Default:
             default_images_dir = Path(__file__).parent / Path("default_style_preset_images")
             path = default_images_dir / (style_preset.name + ".png")
@@ -53,8 +54,8 @@ class StylePresetImageFileStorageDisk(StylePresetImageFileStorageBase):
 
         return path
 
-    def get_url(self, style_preset_id: str) -> str | None:
-        path = self.get_path(style_preset_id)
+    def get_url(self, style_preset_id: str, user_id: Optional[str] = None) -> str | None:
+        path = self.get_path(style_preset_id, user_id=user_id)
         if not self._validate_path(path):
             return
 
@@ -65,9 +66,9 @@ class StylePresetImageFileStorageDisk(StylePresetImageFileStorageBase):
 
         return url
 
-    def delete(self, style_preset_id: str) -> None:
+    def delete(self, style_preset_id: str, user_id: Optional[str] = None) -> None:
         try:
-            path = self.get_path(style_preset_id)
+            path = self.get_path(style_preset_id, user_id=user_id)
 
             if not self._validate_path(path):
                 raise StylePresetImageFileNotFoundException

@@ -20,28 +20,30 @@ class SqliteBoardImageRecordStorage(BoardImageRecordStorageBase):
         self,
         board_id: str,
         image_name: str,
+        user_id: Optional[str] = None,
     ) -> None:
         with self._db.transaction() as cursor:
             cursor.execute(
                 """--sql
-                INSERT INTO board_images (board_id, image_name)
-                VALUES (?, ?)
-                ON CONFLICT (image_name) DO UPDATE SET board_id = ?;
+                INSERT INTO board_images (board_id, image_name, user_id)
+                VALUES (?, ?, ?)
+                ON CONFLICT (image_name) DO UPDATE SET board_id = ?, user_id = ?;
                 """,
-                (board_id, image_name, board_id),
+                (board_id, image_name, board_id, user_id),
             )
 
     def remove_image_from_board(
         self,
         image_name: str,
+        user_id: Optional[str] = None,
     ) -> None:
         with self._db.transaction() as cursor:
             cursor.execute(
                 """--sql
                 DELETE FROM board_images
-                WHERE image_name = ?;
+                WHERE image_name = ? AND user_id = ?;
                 """,
-                (image_name,),
+                (image_name, user_id),
             )
 
     def get_images_for_board(
@@ -49,6 +51,7 @@ class SqliteBoardImageRecordStorage(BoardImageRecordStorageBase):
         board_id: str,
         offset: int = 0,
         limit: int = 10,
+        user_id: Optional[str] = None,
     ) -> OffsetPaginatedResults[ImageRecord]:
         with self._db.transaction() as cursor:
             cursor.execute(
@@ -56,10 +59,10 @@ class SqliteBoardImageRecordStorage(BoardImageRecordStorageBase):
                 SELECT images.*
                 FROM board_images
                 INNER JOIN images ON board_images.image_name = images.image_name
-                WHERE board_images.board_id = ?
+                WHERE board_images.board_id = ? AND board_images.user_id = ?
                 ORDER BY board_images.updated_at DESC;
                 """,
-                (board_id,),
+                (board_id, user_id),
             )
             result = cast(list[sqlite3.Row], cursor.fetchall())
             images = [deserialize_image_record(dict(r)) for r in result]
@@ -78,16 +81,17 @@ class SqliteBoardImageRecordStorage(BoardImageRecordStorageBase):
         board_id: str,
         categories: list[ImageCategory] | None,
         is_intermediate: bool | None,
+        user_id: Optional[str] = None,
     ) -> list[str]:
         with self._db.transaction() as cursor:
-            params: list[str | bool] = []
+            params: list[str | bool | None] = []
 
             # Base query is a join between images and board_images
             stmt = """
                     SELECT images.image_name
                     FROM images
                     LEFT JOIN board_images ON board_images.image_name = images.image_name
-                    WHERE 1=1
+                    WHERE 1=1 AND board_images.user_id = ?
                     """
 
             # Handle board_id filter
@@ -95,12 +99,13 @@ class SqliteBoardImageRecordStorage(BoardImageRecordStorageBase):
                 stmt += """--sql
                     AND board_images.board_id IS NULL
                     """
+                params.append(user_id)
             else:
                 stmt += """--sql
                     AND board_images.board_id = ?
                     """
                 params.append(board_id)
-
+            params.append(user_id)
             # Add the category filter
             if categories is not None:
                 # Convert the enum values to unique list of strings
@@ -134,22 +139,23 @@ class SqliteBoardImageRecordStorage(BoardImageRecordStorageBase):
     def get_board_for_image(
         self,
         image_name: str,
+        user_id: Optional[str] = None,
     ) -> Optional[str]:
         with self._db.transaction() as cursor:
             cursor.execute(
                 """--sql
                     SELECT board_id
                     FROM board_images
-                    WHERE image_name = ?;
+                    WHERE image_name = ? AND user_id = ?;
                     """,
-                (image_name,),
+                (image_name, user_id),
             )
             result = cursor.fetchone()
         if result is None:
             return None
         return cast(str, result[0])
 
-    def get_image_count_for_board(self, board_id: str) -> int:
+    def get_image_count_for_board(self, board_id: str, user_id: Optional[str] = None) -> int:
         with self._db.transaction() as cursor:
             cursor.execute(
                 """--sql
@@ -157,9 +163,9 @@ class SqliteBoardImageRecordStorage(BoardImageRecordStorageBase):
                     FROM board_images
                     INNER JOIN images ON board_images.image_name = images.image_name
                     WHERE images.is_intermediate = FALSE
-                    AND board_images.board_id = ?;
+                    AND board_images.board_id = ? AND board_images.user_id = ?;
                     """,
-                (board_id,),
+                (board_id, user_id),
             )
             count = cast(int, cursor.fetchone()[0])
         return count
