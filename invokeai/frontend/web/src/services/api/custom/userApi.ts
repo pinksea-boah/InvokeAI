@@ -44,11 +44,11 @@ export const userApi = createApi({
     }),
 
     /**
-     * 로그인
+     * 이메일 로그인 (실제 API 호출)
      */
-    login: builder.mutation<AuthResponse, LoginRequest>({
+    emailLogin: builder.mutation<AuthResponse, LoginRequest>({
       query: (credentials) => ({
-        url: '/oauth/google/login',
+        url: '/email/email-login',
         method: 'POST',
         body: credentials,
       }),
@@ -69,4 +69,4 @@ export const userApi = createApi({
 });
 
 // Auto-generated hooks
-export const { useGetUserInfoQuery, useLazyGetUserInfoQuery, useLoginMutation, useLogoutMutation } = userApi;
+export const { useGetUserInfoQuery, useEmailLoginMutation, useLogoutMutation } = userApi;

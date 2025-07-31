@@ -1,6 +1,5 @@
 import {
   Button,
-  Flex,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -9,13 +8,18 @@ import {
   ModalOverlay,
   Text,
   useDisclosure,
+  VStack,
+  Icon,
+  useToast,
 } from '@invoke-ai/ui-library';
 import { useAuth } from 'features/system/hooks/useAuth';
 import { useCallback } from 'react';
+import { PiDiscordLogo, PiEnvelope } from 'react-icons/pi';
 
 export const LoginModal = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isAuthenticated, loginWithGoogle, handleLogout } = useAuth();
+  const { isAuthenticated, loginWithGoogle, loginWithDiscord, handleLogout } = useAuth();
+  const toast = useToast();
 
   // 인증 버튼 클릭 핸들러
   const handleAuth = useCallback(() => {
@@ -25,6 +29,11 @@ export const LoginModal = () => {
       onOpen();
     }
   }, [isAuthenticated, handleLogout, onOpen]);
+
+  // Discord 로그인 핸들러
+  const handleDiscordLogin = useCallback(() => {
+    loginWithDiscord();
+  }, [loginWithDiscord]);
 
   return (
     <>
@@ -50,7 +59,7 @@ export const LoginModal = () => {
       </Button>
 
       {/* 로그인 모달 */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent maxW="400px" bg="white" borderRadius="16px">
           <ModalHeader textAlign="center" pb={4}>
@@ -60,7 +69,7 @@ export const LoginModal = () => {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <Flex flexDir="column" gap={4}>
+            <VStack spacing={4}>
               <Text textAlign="center" color="gray.600" fontSize="sm">
                 계정에 로그인하여 모든 기능을 이용하세요
               </Text>
@@ -84,8 +93,10 @@ export const LoginModal = () => {
                 borderColor="gray.200"
                 position="relative"
                 overflow="hidden"
+                px={4}
+                color="#1f2937"
               >
-                <svg className="w-6 h-6" viewBox="0 0 24 24">
+                <svg width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -103,9 +114,56 @@ export const LoginModal = () => {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                <span className="text-gray-800 font-medium text-sm">Continue with Google</span>
+                <span className="text-black font-medium text-sm">Continue with Google</span>
               </Button>
-            </Flex>
+
+              {/* Discord Sign Up Button */}
+              <Button
+                onClick={handleDiscordLogin}
+                w="full"
+                h="52px"
+                bg="#5865F2"
+                _hover={{ bg: '#4752C4', boxShadow: 'xl', transform: 'scale(1.02)' }}
+                transition="all 0.3s"
+                borderRadius="16px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                gap={3}
+                boxShadow="lg"
+                _active={{ transform: 'scale(0.98)' }}
+                position="relative"
+                overflow="hidden"
+                color="white"
+              >
+                <Icon as={PiDiscordLogo} w={6} h={6} />
+                <span className="font-medium text-sm">Continue with Discord</span>
+              </Button>
+
+              {/* 이메일 로그인 버튼 */}
+              <Button
+                onClick={() => (window.location.href = 'http://localhost:3000/login')}
+                w="full"
+                h="52px"
+                bg="#ff3eb5"
+                _hover={{ bg: '#e635a3', boxShadow: 'xl', transform: 'scale(1.02)' }}
+                transition="all 0.3s"
+                borderRadius="16px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                gap={3}
+                boxShadow="lg"
+                _active={{ transform: 'scale(0.98)' }}
+                position="relative"
+                overflow="hidden"
+                px={4}
+                color="white"
+              >
+                <Icon as={PiEnvelope} w={6} h={6} />
+                <span className="text-white font-medium text-sm">Continue with Email</span>
+              </Button>
+            </VStack>
           </ModalBody>
         </ModalContent>
       </Modal>

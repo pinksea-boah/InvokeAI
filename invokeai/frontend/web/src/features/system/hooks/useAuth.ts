@@ -4,11 +4,12 @@ import { resetQueueId } from 'app/store/nanostores/queueId';
 import { useAppDispatch } from 'app/store/storeHooks';
 import { clearUser } from 'app/store/userSlice';
 import { useCallback } from 'react';
-import { useLogoutMutation } from 'services/api/custom/userApi';
+import { useLogoutMutation, useEmailLoginMutation } from 'services/api/custom/userApi';
 
-// OAuth 엔드포인트 상수
+// OAuth 엔드포인트 상수 (API 통신이 아닌 리다이렉트용)
 const OAUTH_ENDPOINTS = {
   GOOGLE: '/oauth/google/login',
+  DISCORD: '/oauth/discord/login',
 } as const;
 
 /**
@@ -18,20 +19,63 @@ export const useAuth = () => {
   const dispatch = useAppDispatch();
   const authToken = useStore($authToken);
   const [logout] = useLogoutMutation();
+  const [emailLogin] = useEmailLoginMutation();
 
   const isAuthenticated = Boolean(authToken);
 
   /**
-   * Google OAuth 로그인
+   * Google OAuth 로그인 (리다이렉트 방식)
    */
   const loginWithGoogle = useCallback(() => {
-    const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
-    const oauthUrl = `${apiBaseUrl}${OAUTH_ENDPOINTS.GOOGLE}`;
-    /* eslint-disable no-console */
+    // 프록시 환경을 고려하여 /editor로 고정
+    const currentPath = '/editor';
+    console.log('🔗 useAuth - 리다이렉트 경로:', currentPath);
 
-    console.log('🚀 useAuth - Google 로그인 시작:', oauthUrl);
+    const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
+    const oauthUrl = `${apiBaseUrl}${OAUTH_ENDPOINTS.GOOGLE}?redirect_path=${encodeURIComponent(currentPath)}`;
+    /* eslint-disable no-console */
+    console.log('🚀 useAuth - Google OAuth 리다이렉트:', oauthUrl);
     window.location.href = oauthUrl;
   }, []);
+
+  /**
+   * Discord OAuth 로그인 (리다이렉트 방식)
+   */
+  const loginWithDiscord = useCallback(() => {
+    // 프록시 환경을 고려하여 /editor로 고정
+    const currentPath = '/editor';
+    console.log('🔗 useAuth - 리다이렉트 경로:', currentPath);
+
+    const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
+    const oauthUrl = `${apiBaseUrl}${OAUTH_ENDPOINTS.DISCORD}?redirect_path=${encodeURIComponent(currentPath)}`;
+    /* eslint-disable no-console */
+    console.log('🚀 useAuth - Discord OAuth 리다이렉트:', oauthUrl);
+    window.location.href = oauthUrl;
+  }, []);
+
+  /**
+   * 이메일 로그인 (실제 API 호출)
+   */
+  const loginWithEmail = useCallback(
+    async (email: string, password: string) => {
+      try {
+        const result = await emailLogin({ email, password }).unwrap();
+        console.log('✅ useAuth - 이메일 로그인 성공:', result);
+
+        // 토큰 저장
+        if (result.access_token) {
+          $authToken.set(result.access_token);
+          console.log('✅ useAuth - 토큰 저장 완료');
+        }
+
+        return result;
+      } catch (error) {
+        console.error('❌ useAuth - 이메일 로그인 실패:', error);
+        throw error;
+      }
+    },
+    [emailLogin]
+  );
 
   /**
    * 로그아웃 처리
@@ -65,6 +109,8 @@ export const useAuth = () => {
   return {
     isAuthenticated,
     loginWithGoogle,
+    loginWithDiscord,
+    loginWithEmail,
     handleLogout,
   };
 };
