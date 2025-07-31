@@ -14,6 +14,7 @@ from invokeai.app.services.config.config_default import InvokeAIAppConfig
 from invokeai.app.services.download.download_default import DownloadQueueService
 from invokeai.app.services.events.events_fastapievents import FastAPIEventService
 from invokeai.app.services.image_files.image_files_disk import DiskImageFileStorage
+from invokeai.app.services.image_files.image_files_minio import MinIOImageFileStorage
 from invokeai.app.services.image_records.image_records_sqlite import SqliteImageRecordStorage
 from invokeai.app.services.images.images_default import ImageService
 from invokeai.app.services.invocation_cache.invocation_cache_memory import MemoryInvocationCache
@@ -91,7 +92,20 @@ class ApiDependencies:
         if output_folder is None:
             raise ValueError("Output folder is not set")
 
-        image_files = DiskImageFileStorage(f"{output_folder}/images")
+        # MinIO 사용 (하드코딩)
+        try:
+            logger.info("Using MinIO for image storage (hardcoded)")
+            image_files = MinIOImageFileStorage(
+                endpoint='localhost:9000',
+                access_key='minioadmin',
+                secret_key='minioadmin',
+                bucket_name='pinksea-dev-images',
+                secure=False
+            )
+        except Exception as e:
+            logger.warning(f"MinIO connection failed: {e}")
+            logger.info(f"Falling back to disk storage: {output_folder}/images")
+            image_files = DiskImageFileStorage(f"{output_folder}/images")
 
         model_images_folder = config.models_path
         style_presets_folder = config.style_presets_path
