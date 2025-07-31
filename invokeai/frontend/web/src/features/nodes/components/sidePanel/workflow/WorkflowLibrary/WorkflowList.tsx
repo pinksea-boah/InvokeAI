@@ -31,7 +31,7 @@ const getCategories = (view: WorkflowLibraryView): WorkflowCategory[] => {
     case 'recent':
       return ['user', 'project', 'default'];
     case 'yours':
-      return ['user', 'project'];
+      return ['user'];
     case 'private':
       return ['user'];
     case 'shared':

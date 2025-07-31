@@ -33,11 +33,10 @@ export const useSocketIO = () => {
 
   const socketUrl = useMemo(() => {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    if (baseUrl) {
-      return baseUrl.replace(/^https?:\/\//i, '');
-    }
-
-    return `${wsProtocol}://${window.location.host}`;
+    // 백엔드 URL을 동적으로 가져오기
+    const backendUrl = baseUrl || window.location.origin;
+    const url = new URL(backendUrl);
+    return `${wsProtocol}://${url.hostname}:${url.port || (wsProtocol === 'wss' ? '443' : '80')}`;
   }, [baseUrl]);
 
   const socketOptions = useMemo(() => {
@@ -50,6 +49,7 @@ export const useSocketIO = () => {
 
     if (authToken) {
       options.auth = { token: authToken };
+      options.extraHeaders = { Authorization: `Bearer ${authToken}` };
       options.transports = ['websocket', 'polling'];
     }
 
@@ -57,6 +57,18 @@ export const useSocketIO = () => {
   }, [authToken, addlSocketOptions, baseUrl]);
 
   useEffect(() => {
+    // 디버깅: Socket.IO 연결 정보 출력
+    console.log('🔌 Socket.IO 연결 시도:', {
+      socketUrl,
+      hasAuthToken: !!authToken,
+      tokenPreview: authToken ? `${authToken.substring(0, 20)}...` : null,
+      socketOptions: {
+        path: socketOptions.path,
+        auth: socketOptions.auth,
+        transports: socketOptions.transports,
+      },
+    });
+
     const socket: AppSocket = io(socketUrl, socketOptions);
     $socket.set(socket);
 
