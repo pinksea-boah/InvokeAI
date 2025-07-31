@@ -485,7 +485,10 @@ export async function loadImage(src: string, fetchUrlFirst?: boolean): Promise<H
   const authToken = $authToken.get();
   let url = src;
   if (authToken && fetchUrlFirst) {
-    const response = await fetch(`${src}?url_only=true`, { credentials: 'include' });
+    // 백엔드 서버 URL 사용
+    const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
+    const fullUrl = src.startsWith('http') ? src : `${apiBaseUrl}${src}`;
+    const response = await fetch(`${fullUrl}?url_only=true`, { credentials: 'include' });
     const data = await response.json();
     url = data.url;
   }
