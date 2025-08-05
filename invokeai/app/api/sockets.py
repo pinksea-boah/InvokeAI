@@ -81,7 +81,9 @@ MODEL_EVENTS = {
 
 BULK_DOWNLOAD_EVENTS = {BulkDownloadStartedEvent, BulkDownloadCompleteEvent, BulkDownloadErrorEvent}
 
-
+async def _on_connect(sid, environ):
+    print(f"🔌 Client connected: {sid}")
+    return True
 class SocketIO:
     _sub_queue = "subscribe_queue"
     _unsub_queue = "unsubscribe_queue"
@@ -100,19 +102,14 @@ class SocketIO:
         self._sio.on(self._sub_bulk_download, handler=self._handle_sub_bulk_download)
         self._sio.on(self._unsub_bulk_download, handler=self._handle_unsub_bulk_download)
 
-        # 모든 이벤트를 캐치하는 디버깅 핸들러 추가
-        self._sio.on('connect', self._handle_connect)
-        self._sio.on('disconnect', self._handle_disconnect)
+        self._sio.on("connect", _on_connect)
 
         register_events(QUEUE_EVENTS, self._handle_queue_event)
         register_events(MODEL_EVENTS, self._handle_model_event)
         register_events(BULK_DOWNLOAD_EVENTS, self._handle_bulk_image_download_event)
-
-    async def _handle_connect(self, sid: str, environ: dict) -> None:
-        print(f"🔌 Client connected: {sid}")
-
-    async def _handle_disconnect(self, sid: str) -> None:
-        print(f"🔌 Client disconnected: {sid}")
+    
+    # async def _handle_disconnect(self, sid: str) -> None:
+    #     print(f"🔌 Client disconnected: {sid}")
 
     async def _handle_sub_queue(self, sid: str, data: Any) -> None:
         print(f"📡 _handle_sub_queue called with sid: {sid}, data: {data}")
