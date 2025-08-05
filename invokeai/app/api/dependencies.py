@@ -96,7 +96,7 @@ class ApiDependencies:
         try:
             logger.info("Using MinIO for image storage (hardcoded)")
             image_files = MinIOImageFileStorage(
-                endpoint='localhost:9000',
+                endpoint='minio:9000',
                 access_key='minioadmin',
                 secret_key='minioadmin',
                 bucket_name='pinksea-dev-images',
