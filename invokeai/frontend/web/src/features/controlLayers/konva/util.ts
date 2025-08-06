@@ -484,13 +484,22 @@ export function getImageDataTransparency(imageData: ImageData): Transparency {
 export async function loadImage(src: string, fetchUrlFirst?: boolean): Promise<HTMLImageElement> {
   const authToken = $authToken.get();
   let url = src;
+
   if (authToken && fetchUrlFirst) {
-    // 백엔드 서버 URL 사용
-    const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
-    const fullUrl = src.startsWith('http') ? src : `${apiBaseUrl}${src}`;
+    // 8080으로 강제 리다이렉트
+    const apiBaseUrl = 'http://localhost:8080';
+    const fullUrl = src.startsWith('http') ? src : `${apiBaseUrl}/${src}`;
+    console.log('🔗 Fetching from 8080:', fullUrl);
     const response = await fetch(`${fullUrl}?url_only=true`, { credentials: 'include' });
     const data = await response.json();
     url = data.url;
+  } else {
+    // fetchUrlFirst가 false일 때도 8080으로 강제 리다이렉트
+    if (!src.startsWith('http')) {
+      const apiBaseUrl = 'http://localhost:8080';
+      url = `${apiBaseUrl}/${src}`;
+      console.log('🔗 Direct load from 8080:', url);
+    }
   }
 
   return new Promise((resolve, reject) => {
