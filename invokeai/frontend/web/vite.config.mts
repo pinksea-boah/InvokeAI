@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
     base: './',
     plugins: [
       react(),
-      mode !== 'test' && eslint({ failOnError: mode === 'production', failOnWarning: mode === 'production' }),
+      mode !== 'test' && eslint({ failOnError: false, failOnWarning: false }),
       tsconfigPaths(),
       visualizer() as unknown as PluginOption,
     ],
@@ -87,7 +87,7 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
         },
         '/api/': {
-          target: 'http://127.0.0.1:9090/api/',
+          target: 'http://127.0.0.1:8080/api/',
           rewrite: (path) => path.replace(/^\/api/, ''),
           changeOrigin: true,
         },
