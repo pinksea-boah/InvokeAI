@@ -153,6 +153,7 @@ class SessionQueueBase(ABC):
         self,
         queue_id: str,
         destination: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> list[SessionQueueItem]:
         """Gets all queue items that match the given parameters"""
         pass

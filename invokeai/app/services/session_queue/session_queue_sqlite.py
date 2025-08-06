@@ -645,6 +645,7 @@ class SqliteSessionQueue(SessionQueueBase):
         self,
         queue_id: str,
         destination: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> list[SessionQueueItem]:
         """Gets all queue items that match the given parameters"""
         with self._db.transaction() as cursor:
@@ -660,6 +661,12 @@ class SqliteSessionQueue(SessionQueueBase):
                     AND destination = ?
                 """
                 params.append(destination)
+
+            if user_id is not None:
+                query += """--sql
+                    AND user_id = ?
+                """
+                params.append(user_id)
 
             query += """--sql
                 ORDER BY
