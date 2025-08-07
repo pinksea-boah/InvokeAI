@@ -1,9 +1,10 @@
-import { Flex, Image, Text } from '@invoke-ai/ui-library';
+import { Flex, Text } from '@invoke-ai/ui-library';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { useTranslation } from 'react-i18next';
 import { useGetBoardAssetsTotalQuery, useGetBoardImagesTotalQuery } from 'services/api/endpoints/boards';
 import { useGetImageDTOQuery } from 'services/api/endpoints/images';
 import type { BoardDTO } from 'services/api/types';
+import { AuthImage } from 'common/components/AuthImage';
 
 type Props = {
   board: BoardDTO | null;
@@ -26,7 +27,7 @@ export const BoardTooltip = ({ board }: Props) => {
   return (
     <Flex flexDir="column" alignItems="center" gap={1}>
       {coverImage && (
-        <Image
+        <AuthImage
           src={coverImage.thumbnail_url}
           draggable={false}
           objectFit="cover"

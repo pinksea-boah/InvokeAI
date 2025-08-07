@@ -1,9 +1,10 @@
-import { Box, Flex, Image, Spinner, Text } from '@invoke-ai/ui-library';
+import { Box, Flex, Spinner, Text } from '@invoke-ai/ui-library';
 import { useStore } from '@nanostores/react';
 import { PromptExpansionResultOverlay } from 'features/prompt/PromptExpansion/PromptExpansionResultOverlay';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PiMagicWandBold } from 'react-icons/pi';
+import { AuthImage } from 'common/components/AuthImage';
 
 import { promptExpansionApi } from './state';
 
@@ -48,7 +49,7 @@ export const PromptExpansionOverlay = memo(() => {
           borderRadius="base"
           overflow="hidden"
         >
-          <Image src={imageDTO.thumbnail_url} objectFit="contain" w="full" h="full" borderRadius="base" />
+          <AuthImage src={imageDTO.thumbnail_url} objectFit="contain" w="full" h="full" borderRadius="base" />
         </Box>
       )}
 

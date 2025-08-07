@@ -1,5 +1,5 @@
 import type { SystemStyleObject } from '@invoke-ai/ui-library';
-import { Box, Flex, Icon, Image, Text, Tooltip } from '@invoke-ai/ui-library';
+import { Box, Flex, Icon, Text, Tooltip } from '@invoke-ai/ui-library';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
 import type { AddImageToBoardDndTargetData } from 'features/dnd/dnd';
@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { PiArchiveBold, PiImageSquare } from 'react-icons/pi';
 import { useGetImageDTOQuery } from 'services/api/endpoints/images';
 import type { BoardDTO } from 'services/api/types';
+import { AuthImage } from 'common/components/AuthImage';
 
 const _hover: SystemStyleObject = {
   bg: 'base.850',
@@ -93,7 +94,7 @@ const CoverImage = ({ board }: { board: BoardDTO }) => {
 
   if (coverImage) {
     return (
-      <Image
+      <AuthImage
         src={coverImage.thumbnail_url}
         draggable={false}
         objectFit="cover"

@@ -1,4 +1,4 @@
-import { Box, Flex, Icon, Image } from '@invoke-ai/ui-library';
+import { Box, Flex, Icon } from '@invoke-ai/ui-library';
 import { useAppSelector } from 'app/store/storeHooks';
 import { preventDefault } from 'common/util/stopPropagation';
 import { TRANSPARENCY_CHECKERBOARD_PATTERN_DARK_DATAURL } from 'features/controlLayers/konva/patterns/transparency-checkerboard-pattern';
@@ -7,6 +7,7 @@ import { ImageComparisonLabel } from 'features/gallery/components/ImageViewer/Im
 import { selectComparisonFit } from 'features/gallery/store/gallerySelectors';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PiCaretLeftBold, PiCaretRightBold } from 'react-icons/pi';
+import { AuthImage } from 'common/components/AuthImage';
 
 import type { ComparisonProps } from './common';
 import { DROP_SHADOW, fitDimsToContainer, getSecondImageDims } from './common';
@@ -125,11 +126,11 @@ export const ImageComparisonSlider = memo(({ firstImage, secondImage, containerD
             backgroundImage={TRANSPARENCY_CHECKERBOARD_PATTERN_DARK_DATAURL}
             backgroundRepeat="repeat"
           />
-          <Image
+          <AuthImage
             position="relative"
             id="image-comparison-second-image"
             src={secondImage.image_url}
-            fallbackSrc={secondImage.thumbnail_url}
+            authFallback={<AuthImage src={secondImage.thumbnail_url} />}
             w={compareImageDims.width}
             h={compareImageDims.height}
             maxW={fittedDims.width}
@@ -148,10 +149,10 @@ export const ImageComparisonSlider = memo(({ firstImage, secondImage, containerD
             w={width}
             overflow="hidden"
           >
-            <Image
+            <AuthImage
               id="image-comparison-first-image"
               src={firstImage.image_url}
-              fallbackSrc={firstImage.thumbnail_url}
+              authFallback={<AuthImage src={firstImage.thumbnail_url} />}
               w={fittedDims.width}
               h={fittedDims.height}
               objectFit="cover"

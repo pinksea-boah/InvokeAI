@@ -1,7 +1,6 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import type { ImageProps, SystemStyleObject } from '@invoke-ai/ui-library';
-import { Image } from '@invoke-ai/ui-library';
 import { useAppStore } from 'app/store/storeHooks';
 import { singleImageDndSource } from 'features/dnd/dnd';
 import type { DndDragPreviewSingleImageState } from 'features/dnd/DndDragPreviewSingleImage';
@@ -10,6 +9,7 @@ import { firefoxDndFix } from 'features/dnd/util';
 import { useImageContextMenu } from 'features/gallery/components/ImageContextMenu/ImageContextMenu';
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import type { ImageDTO } from 'services/api/types';
+import { AuthImage } from 'common/components/AuthImage';
 
 const sx = {
   objectFit: 'contain',
@@ -67,11 +67,11 @@ export const DndImage = memo(
 
     return (
       <>
-        <Image
+        <AuthImage
           role="button"
           ref={ref}
           src={asThumbnail ? imageDTO.thumbnail_url : imageDTO.image_url}
-          fallbackSrc={asThumbnail ? undefined : imageDTO.thumbnail_url}
+          authFallback={asThumbnail ? undefined : <AuthImage src={imageDTO.thumbnail_url} />}
           width={imageDTO.width}
           height={imageDTO.height}
           sx={sx}
