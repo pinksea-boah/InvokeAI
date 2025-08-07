@@ -40,6 +40,7 @@ from invokeai.app.services.shared.sqlite.sqlite_util import init_db
 from invokeai.app.services.style_preset_images.style_preset_images_disk import StylePresetImageFileStorageDisk
 from invokeai.app.services.style_preset_records.style_preset_records_sqlite import SqliteStylePresetRecordsStorage
 from invokeai.app.services.urls.urls_default import LocalUrlService
+from invokeai.app.services.urls.urls_minio import MinIOUrlService
 from invokeai.app.services.workflow_records.workflow_records_sqlite import SqliteWorkflowRecordsStorage
 from invokeai.app.services.workflow_thumbnails.workflow_thumbnails_disk import WorkflowThumbnailFileStorageDisk
 from invokeai.backend.stable_diffusion.diffusion.conditioning_data import (
@@ -102,10 +103,19 @@ class ApiDependencies:
                 bucket_name='pinksea-dev-images',
                 secure=False
             )
+            # MinIO URL 서비스 사용 (Docker 네트워크용)
+            urls = MinIOUrlService(
+                minio_endpoint='http://minio:9000',  # Docker 네트워크 내부 주소
+                bucket_name='pinksea-dev-images',
+                access_key='minioadmin',
+                secret_key='minioadmin'
+            )
         except Exception as e:
             logger.warning(f"MinIO connection failed: {e}")
             logger.info(f"Falling back to disk storage: {output_folder}/images")
             image_files = DiskImageFileStorage(f"{output_folder}/images")
+            # 로컬 URL 서비스 사용
+            urls = LocalUrlService()
 
         model_images_folder = config.models_path
         style_presets_folder = config.style_presets_path
@@ -160,7 +170,6 @@ class ApiDependencies:
         performance_statistics = InvocationStatsService()
         session_processor = DefaultSessionProcessor(session_runner=DefaultSessionRunner())
         session_queue = SqliteSessionQueue(db=db)
-        urls = LocalUrlService()
         workflow_records = SqliteWorkflowRecordsStorage(db=db)
         style_preset_records = SqliteStylePresetRecordsStorage(db=db)
         style_preset_image_files = StylePresetImageFileStorageDisk(style_presets_folder / "images")
