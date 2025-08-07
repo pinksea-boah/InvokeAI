@@ -484,21 +484,26 @@ export function getImageDataTransparency(imageData: ImageData): Transparency {
 export async function loadImage(src: string, fetchUrlFirst?: boolean): Promise<HTMLImageElement> {
   const authToken = $authToken.get();
   let url = src;
-
+  console.log('loadImage', src, fetchUrlFirst);
   if (authToken && fetchUrlFirst) {
-    // 8080으로 강제 리다이렉트
-    const apiBaseUrl = 'http://localhost:8080';
+    // 백엔드 서버 URL 사용
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
     const fullUrl = src.startsWith('http') ? src : `${apiBaseUrl}/${src}`;
-    console.log('🔗 Fetching from 8080:', fullUrl);
-    const response = await fetch(`${fullUrl}?url_only=true`, { credentials: 'include' });
-    const data = await response.json();
-    url = data.url;
-  } else {
-    // fetchUrlFirst가 false일 때도 8080으로 강제 리다이렉트
-    if (!src.startsWith('http')) {
-      const apiBaseUrl = 'http://localhost:8080';
-      url = `${apiBaseUrl}/${src}`;
-      console.log('🔗 Direct load from 8080:', url);
+    console.log('fullUrl', fullUrl);
+    try {
+      const response = await fetch(`${fullUrl}?url_only=true`, {
+        credentials: 'include',
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      url = data.url;
+    } catch (error) {
+      console.error('Error fetching URL:', error);
     }
   }
 
