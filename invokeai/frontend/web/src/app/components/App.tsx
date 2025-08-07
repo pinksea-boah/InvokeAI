@@ -73,15 +73,21 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
   // authToken이 설정된 후 main API들을 다시 호출
   useEffect(() => {
     if (authToken) {
-      console.log('🔄 App - 토큰 설정됨, main API 재호출 시작');
-      // 모든 main API 쿼리를 무효화하여 재호출
-      dispatch(api.util.invalidateTags(['AppVersion', 'AppConfig', 'Board', 'ModelConfig', 'Workflow', 'Image']));
-
-      // 실패한 요청들을 다시 시도
-      setTimeout(() => {
-        console.log('🔄 App - 실패한 요청들 재시도');
-        dispatch(api.util.resetApiState());
-      }, 100);
+      // 갤러리 관련 API들을 명시적으로 재호출
+      dispatch(
+        api.util.invalidateTags([
+          'ImageNameList',
+          'ImageList',
+          'BoardImagesTotal',
+          'BoardAssetsTotal',
+          'ImageCollectionCounts',
+          'ImageCollection',
+          'ImageMetadata',
+          'ImageWorkflow',
+          'IntermediatesCount',
+          'Board',
+        ])
+      );
     }
   }, [authToken, dispatch]);
 
