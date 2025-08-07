@@ -1,19 +1,18 @@
 import type { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import { chakra, Flex } from '@invoke-ai/ui-library';
+import { Flex } from '@invoke-ai/ui-library';
 import type { SingleImageDndSourceData } from 'features/dnd/dnd';
 import { DND_IMAGE_DRAG_PREVIEW_SIZE, preserveOffsetOnSourceFallbackCentered } from 'features/dnd/util';
 import { memo } from 'react';
 import { createPortal } from 'react-dom';
 import type { ImageDTO } from 'services/api/types';
 import type { Param0 } from 'tsafe';
-
-const ChakraImg = chakra('img');
+import { AuthImage } from 'common/components/AuthImage';
 
 const DndDragPreviewSingleImage = memo(({ imageDTO }: { imageDTO: ImageDTO }) => {
   return (
     <Flex w={DND_IMAGE_DRAG_PREVIEW_SIZE} h={DND_IMAGE_DRAG_PREVIEW_SIZE}>
-      <ChakraImg
+      <AuthImage
         margin="auto"
         maxW="full"
         maxH="full"

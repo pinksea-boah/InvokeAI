@@ -1,4 +1,4 @@
-import { Box, Flex, Image } from '@invoke-ai/ui-library';
+import { Box, Flex } from '@invoke-ai/ui-library';
 import { useAppSelector } from 'app/store/storeHooks';
 import { useBoolean } from 'common/hooks/useBoolean';
 import { preventDefault } from 'common/util/stopPropagation';
@@ -6,7 +6,8 @@ import { TRANSPARENCY_CHECKERBOARD_PATTERN_DARK_DATAURL } from 'features/control
 import type { Dimensions } from 'features/controlLayers/store/types';
 import { ImageComparisonLabel } from 'features/gallery/components/ImageViewer/ImageComparisonLabel';
 import { selectComparisonFit } from 'features/gallery/store/gallerySelectors';
-import { memo, useMemo, useRef } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { AuthImage } from 'common/components/AuthImage';
 
 import type { ComparisonProps } from './common';
 import { fitDimsToContainer, getSecondImageDims } from './common';
@@ -47,10 +48,10 @@ export const ImageComparisonHover = memo(({ firstImage, secondImage, containerDi
           overflow="hidden"
           borderRadius="base"
         >
-          <Image
+          <AuthImage
             id="image-comparison-hover-first-image"
             src={firstImage.image_url}
-            fallbackSrc={firstImage.thumbnail_url}
+            authFallback={<AuthImage src={firstImage.thumbnail_url} />}
             w={fittedDims.width}
             h={fittedDims.height}
             maxW="full"
@@ -82,11 +83,11 @@ export const ImageComparisonHover = memo(({ firstImage, secondImage, containerDi
               backgroundImage={TRANSPARENCY_CHECKERBOARD_PATTERN_DARK_DATAURL}
               backgroundRepeat="repeat"
             />
-            <Image
+            <AuthImage
               position="relative"
               id="image-comparison-hover-second-image"
               src={secondImage.image_url}
-              fallbackSrc={secondImage.thumbnail_url}
+              authFallback={<AuthImage src={secondImage.thumbnail_url} />}
               w={compareImageDims.width}
               h={compareImageDims.height}
               maxW={fittedDims.width}

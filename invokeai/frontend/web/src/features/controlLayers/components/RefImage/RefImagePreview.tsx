@@ -1,5 +1,5 @@
 import type { SystemStyleObject } from '@invoke-ai/ui-library';
-import { Flex, Icon, IconButton, Image, Skeleton, Text, Tooltip } from '@invoke-ai/ui-library';
+import { Flex, Icon, IconButton, Skeleton, Text, Tooltip } from '@invoke-ai/ui-library';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
 import { round } from 'es-toolkit/compat';
@@ -16,6 +16,7 @@ import { getGlobalReferenceImageWarnings } from 'features/controlLayers/store/va
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { PiExclamationMarkBold, PiEyeSlashBold, PiImageBold } from 'react-icons/pi';
 import { useGetImageDTOQuery } from 'services/api/endpoints/images';
+import { AuthImage } from 'common/components/AuthImage';
 
 import { RefImageWarningTooltipContent } from './RefImageWarningTooltipContent';
 
@@ -144,12 +145,12 @@ export const RefImagePreview = memo(() => {
         cursor="pointer"
         overflow="hidden"
       >
-        <Image
+        <AuthImage
           src={imageDTO?.thumbnail_url}
           objectFit="contain"
           aspectRatio="1/1"
           height={imageDTO?.height}
-          fallback={<Skeleton h="full" aspectRatio="1/1" />}
+          authFallback={<Skeleton h="full" aspectRatio="1/1" />}
           maxW="full"
           maxH="full"
         />

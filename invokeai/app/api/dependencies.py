@@ -108,7 +108,9 @@ class ApiDependencies:
                 minio_endpoint='http://minio:9000',  # Docker 네트워크 내부 주소
                 bucket_name='pinksea-dev-images',
                 access_key='minioadmin',
-                secret_key='minioadmin'
+                secret_key='minioadmin',
+                base_url='api/v1',
+                base_url_v2='api/v2'
             )
         except Exception as e:
             logger.warning(f"MinIO connection failed: {e}")

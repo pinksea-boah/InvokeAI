@@ -18,6 +18,7 @@ import { customAlphabet } from 'nanoid';
 import type { StrokeOptions } from 'perfect-freehand';
 import getStroke from 'perfect-freehand';
 import { assert } from 'tsafe';
+import { isAuthRequiredImageUrl, loadAuthImageAsDataUrl } from 'common/util/authImageUtils';
 
 /**
  * Gets the scaled and floored cursor position on the stage. If the cursor is not currently over the stage, returns null.
@@ -483,13 +484,29 @@ export function getImageDataTransparency(imageData: ImageData): Transparency {
  */
 export async function loadImage(src: string, fetchUrlFirst?: boolean): Promise<HTMLImageElement> {
   const authToken = $authToken.get();
+  
+  // 인증이 필요한 URL인 경우 loadAuthImageAsDataUrl 사용
+  if (authToken && isAuthRequiredImageUrl(src)) {
+    try {
+      const dataUrl = await loadAuthImageAsDataUrl(src);
+      return new Promise((resolve, reject) => {
+        const imageElement = new Image();
+        imageElement.onload = () => resolve(imageElement);
+        imageElement.onerror = (error) => reject(error);
+        imageElement.src = dataUrl;
+      });
+    } catch (error) {
+      console.error('Error loading authenticated image:', error);
+      throw error;
+    }
+  }
+
+  // 기존 로직 (인증이 필요하지 않은 경우)
   let url = src;
-  console.log('loadImage', src, fetchUrlFirst);
   if (authToken && fetchUrlFirst) {
     // 백엔드 서버 URL 사용
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
     const fullUrl = src.startsWith('http') ? src : `${apiBaseUrl}/${src}`;
-    console.log('fullUrl', fullUrl);
     try {
       const response = await fetch(`${fullUrl}?url_only=true`, { 
         credentials: 'include',
@@ -497,10 +514,7 @@ export async function loadImage(src: string, fetchUrlFirst?: boolean): Promise<H
           'Authorization': `Bearer ${authToken}`
         }
       });
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
-      
       url = data.url;
     } catch (error) {
       console.error('Error fetching URL:', error);
