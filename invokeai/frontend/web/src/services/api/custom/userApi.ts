@@ -8,15 +8,23 @@ import type { AuthResponse, LoginRequest, UserInfoResponse } from './userSchema'
  * 동적 baseQuery 생성 함수
  */
 const createUserBaseQuery = () => {
-  const apiServerUrl = $apiServerUrl.get() || 'http://localhost:8080';
-  console.log('🔧 userApi - baseQuery 생성:', { apiServerUrl });
+  // 환경 변수에서 직접 가져오기 (main.tsx보다 먼저 로드되므로)
+  const apiServerUrl =
+    import.meta.env.VITE_API_SERVER_URL ||
+    (import.meta.env.VITE_MODE === 'development' ? 'http://localhost:8080' : 'https://pinksea.ai');
+
+  console.log('🔧 userApi - baseQuery 생성:', {
+    apiServerUrl,
+    viteMode: import.meta.env.VITE_MODE,
+    viteApiServerUrl: import.meta.env.VITE_API_SERVER_URL,
+  });
 
   return fetchBaseQuery({
     baseUrl: apiServerUrl,
     credentials: 'include', // 쿠키 포함
     prepareHeaders: (headers) => {
       const token = $authToken.get();
-      const currentApiServerUrl = $apiServerUrl.get() || 'http://localhost:8080';
+      const currentApiServerUrl = $apiServerUrl.get() || apiServerUrl;
 
       /* eslint-disable no-console */
       console.log('🔐 userApi - prepareHeaders 호출:', {
