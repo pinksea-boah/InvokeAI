@@ -5,22 +5,26 @@ import { $authToken } from 'app/store/nanostores/authToken';
 import type { LogoutResponse, RefreshTokenResponse } from './sessionSchema';
 
 /**
- * 세션 API - 토큰 및 세션 관리
- * 인증과 분리하여 세션 라이프사이클만 담당
+ * 동적 baseQuery 생성 함수
  */
-export const sessionApi = createApi({
-  reducerPath: 'sessionApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: $apiServerUrl.get() || 'http://localhost:8080',
+const createSessionBaseQuery = () => {
+  const apiServerUrl = $apiServerUrl.get() || 'http://localhost:8080';
+  console.log('🔧 sessionApi - baseQuery 생성:', { apiServerUrl });
+
+  return fetchBaseQuery({
+    baseUrl: apiServerUrl,
     credentials: 'include', // HTTP-only 쿠키 포함
     prepareHeaders: (headers) => {
       const token = $authToken.get();
+      const currentApiServerUrl = $apiServerUrl.get() || 'http://localhost:8080';
+
       /* eslint-disable no-console */
       console.log('🔐 sessionApi - prepareHeaders 호출:', {
         hasToken: !!token,
         tokenPreview: token ? `${token.substring(0, 20)}...` : null,
-        baseUrl: $apiServerUrl.get() || 'http://localhost:8080',
+        apiServerUrl: currentApiServerUrl,
       });
+
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
         console.log('✅ sessionApi - Authorization 헤더 설정 완료');
@@ -36,7 +40,16 @@ export const sessionApi = createApi({
 
       return headers;
     },
-  }),
+  });
+};
+
+/**
+ * 세션 API - 토큰 및 세션 관리
+ * 인증과 분리하여 세션 라이프사이클만 담당
+ */
+export const sessionApi = createApi({
+  reducerPath: 'sessionApi',
+  baseQuery: createSessionBaseQuery(),
   tagTypes: ['Session', 'Token'],
   endpoints: (builder) => ({
     /**
