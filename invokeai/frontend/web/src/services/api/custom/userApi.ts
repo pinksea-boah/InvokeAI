@@ -5,20 +5,24 @@ import { $authToken } from 'app/store/nanostores/authToken';
 import type { AuthResponse, LoginRequest, UserInfoResponse } from './userSchema';
 
 /**
- * 사용자 API - 인증 및 사용자 관리
+ * 동적 baseQuery 생성 함수
  */
-export const userApi = createApi({
-  reducerPath: 'userApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: $apiServerUrl.get() || 'http://localhost:8080',
+const createUserBaseQuery = () => {
+  const apiServerUrl = $apiServerUrl.get() || 'http://localhost:8080';
+  console.log('🔧 userApi - baseQuery 생성:', { apiServerUrl });
+
+  return fetchBaseQuery({
+    baseUrl: apiServerUrl,
     credentials: 'include', // 쿠키 포함
     prepareHeaders: (headers) => {
       const token = $authToken.get();
+      const currentApiServerUrl = $apiServerUrl.get() || 'http://localhost:8080';
+
       /* eslint-disable no-console */
       console.log('🔐 userApi - prepareHeaders 호출:', {
         hasToken: !!token,
         tokenPreview: token ? `${token.substring(0, 20)}...` : null,
-        baseUrl: $apiServerUrl.get() || 'http://localhost:8080',
+        apiServerUrl: currentApiServerUrl,
       });
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
@@ -32,7 +36,15 @@ export const userApi = createApi({
 
       return headers;
     },
-  }),
+  });
+};
+
+/**
+ * 사용자 API - 인증 및 사용자 관리
+ */
+export const userApi = createApi({
+  reducerPath: 'userApi',
+  baseQuery: createUserBaseQuery(),
   tagTypes: ['Auth', 'User'],
   endpoints: (builder) => ({
     /**

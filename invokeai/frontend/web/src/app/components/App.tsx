@@ -48,21 +48,11 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
         .unwrap()
         .then((result) => {
           if (result.status === 'success') {
-            if (import.meta.env.MODE === 'development') {
-              // eslint-disable-next-line no-console
-              console.log('✅ App - accessToken 발급 성공', result.access_token);
-            }
             $authToken.set(result.access_token);
-            if (import.meta.env.MODE === 'development') {
-              console.log('🔍 App - 토큰 저장 후 상태 확인:', {
-                storedToken: $authToken.get() ? `${$authToken.get()?.substring(0, 20)}...` : null,
-                timestamp: new Date().toISOString(),
-              });
-            }
           }
         })
         .catch((error) => {
-          if (import.meta.env.MODE === 'development') {
+          if (import.meta.env.VITE_MODE === 'development') {
             // eslint-disable-next-line no-console
             console.error('❌ App - accessToken 발급 실패', error);
           }
