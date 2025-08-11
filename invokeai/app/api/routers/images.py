@@ -79,6 +79,7 @@ async def upload_image(
         description="The metadata to associate with the image, must be a stringified JSON dict",
         embed=True,
     ),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> ImageDTO:
     """Uploads an image"""
     if not file.content_type or not file.content_type.startswith("image"):
@@ -133,6 +134,7 @@ async def upload_image(
             workflow=extracted_metadata.invokeai_workflow,
             graph=extracted_metadata.invokeai_graph,
             is_intermediate=is_intermediate,
+            user_id=user_id,
         )
 
         response.status_code = 201
