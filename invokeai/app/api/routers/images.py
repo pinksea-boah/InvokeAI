@@ -602,7 +602,11 @@ async def get_image_names(
     user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> ImageNamesResult:
     """Gets ordered list of image names with metadata for optimistic updates"""
-
+    print(f"DEBUG: user_id = {user_id}")
+    print(f"DEBUG: categories = {categories}")
+    print(f"DEBUG: categories type = {type(categories)}")
+    if categories:
+        print(f"DEBUG: categories values = {[c.value for c in categories]}")
     try:
         result = ApiDependencies.invoker.services.images.get_image_names(
             starred_first=starred_first,
