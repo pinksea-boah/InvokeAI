@@ -6,17 +6,17 @@ from invokeai.app.services.urls.urls_base import UrlServiceBase
 
 
 class MinIOUrlService(UrlServiceBase):
-    def __init__(self, minio_endpoint: str = "http://localhost:9000", bucket_name: str = "pinksea-dev-images", 
-                 access_key: str = "minioadmin", secret_key: str = "minioadmin", 
+    def __init__(self, minio_endpoint: str | None = None, bucket_name: str | None = None, 
+                 access_key: str | None = None, secret_key: str | None = None, 
                  base_url: str = "api/v1", base_url_v2: str = "api/v2"):
-        self._minio_endpoint = minio_endpoint
-        self._bucket_name = bucket_name
-        self._access_key = access_key
-        self._secret_key = secret_key
+        self._minio_endpoint = minio_endpoint or os.getenv('MINIO_URL_ENDPOINT', "http://localhost:9000")
+        self._bucket_name = bucket_name or os.getenv('MINIO_BUCKET_NAME', "pinksea-dev-images")
+        self._access_key = access_key or os.getenv('MINIO_ACCESS_KEY', "minioadmin")
+        self._secret_key = secret_key or os.getenv('MINIO_SECRET_KEY', "minioadmin")
         self._base_url = base_url
         self._base_url_v2 = base_url_v2
         self._client = None
-        self._frontend_base_url = "http://localhost:8080/invokeai"
+        self._frontend_base_url = os.getenv('MINIO_FRONTEND_BASE_URL', "http://localhost:8080/invokeai")
 
     def _get_client(self):
         """MinIO 클라이언트를 가져옵니다"""
@@ -24,8 +24,8 @@ class MinIOUrlService(UrlServiceBase):
             from minio import Minio
             self._client = Minio(
                 self._minio_endpoint.replace("http://", "").replace("https://", ""),
-                access_key=self._access_key,
-                secret_key=self._secret_key,
+                access_key=os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                secret_key=os.getenv('MINIO_SECRET_KEY', 'minioadmin'),
                 secure=self._minio_endpoint.startswith("https://")
             )
         return self._client

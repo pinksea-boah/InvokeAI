@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Kyle Schouviller (https://github.com/kyle0654)
 
 import asyncio
+import os
 from logging import Logger
 
 import torch
@@ -93,22 +94,22 @@ class ApiDependencies:
         if output_folder is None:
             raise ValueError("Output folder is not set")
 
-        # MinIO 사용 (하드코딩)
+        # MinIO 사용
         try:
-            logger.info("Using MinIO for image storage (hardcoded)")
+            logger.info("Using MinIO for image storage (environment-based)")
             image_files = MinIOImageFileStorage(
-                endpoint='minio:9000',
-                access_key='minioadmin',
-                secret_key='minioadmin',
-                bucket_name='pinksea-dev-images',
-                secure=False
+                endpoint=os.getenv('MINIO_ENDPOINT', 'minio:9000'),
+                access_key=os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                secret_key=os.getenv('MINIO_SECRET_KEY', 'minioadmin'),
+                bucket_name=os.getenv('MINIO_BUCKET_NAME', 'pinksea-dev-images'),
+                secure=os.getenv('MINIO_SECURE', 'false').lower() == 'true'
             )
             # MinIO URL 서비스 사용 (Docker 네트워크용)
             urls = MinIOUrlService(
-                minio_endpoint='http://minio:9000',  # Docker 네트워크 내부 주소
-                bucket_name='pinksea-dev-images',
-                access_key='minioadmin',
-                secret_key='minioadmin',
+                minio_endpoint=os.getenv('MINIO_URL_ENDPOINT', 'http://minio:9000'),  # Docker 네트워크 내부 주소
+                bucket_name=os.getenv('MINIO_BUCKET_NAME', 'pinksea-dev-images'),
+                access_key=os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                secret_key=os.getenv('MINIO_SECRET_KEY', 'minioadmin'),
                 base_url='api/v1',
                 base_url_v2='api/v2'
             )
