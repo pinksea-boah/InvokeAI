@@ -54,7 +54,9 @@ from invokeai.backend.stable_diffusion.diffusion.conditioning_data import (
 )
 from invokeai.backend.util.logging import InvokeAILogger
 from invokeai.version.invokeai_version import __version__
+from dotenv import load_dotenv
 
+load_dotenv()
 
 # TODO: is there a better way to achieve this?
 def check_internet() -> bool:
