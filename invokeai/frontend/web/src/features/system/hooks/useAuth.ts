@@ -5,6 +5,26 @@ import { useAppDispatch } from 'app/store/storeHooks';
 import { clearUser } from 'app/store/userSlice';
 import { useCallback } from 'react';
 import { useLogoutMutation, useEmailLoginMutation } from 'services/api/custom/userApi';
+import { allEntitiesDeleted } from 'features/controlLayers/store/canvasSlice';
+import {
+  paramsReset,
+  modelChanged,
+  vaeSelected,
+  fluxVAESelected,
+  refinerModelChanged,
+} from 'features/controlLayers/store/paramsSlice';
+import {
+  imageSelected,
+  boardIdSelected,
+  galleryViewChanged,
+  imageToCompareChanged,
+  searchTermChanged,
+  boardSearchTextChanged,
+} from 'features/gallery/store/gallerySlice';
+import { listParamsReset } from 'features/queue/store/queueSlice';
+import { generateSessionReset, canvasSessionReset } from 'features/controlLayers/store/canvasStagingAreaSlice';
+import { setActiveTab, accordionStateChanged, expanderStateChanged } from 'features/ui/store/uiSlice';
+import { api } from 'services/api';
 
 // OAuth 엔드포인트 상수 (API 통신이 아닌 리다이렉트용)
 const OAUTH_ENDPOINTS = {
@@ -29,12 +49,9 @@ export const useAuth = () => {
   const loginWithGoogle = useCallback(() => {
     // 프록시 환경을 고려하여 /editor로 고정
     const currentPath = '/editor';
-    console.log('🔗 useAuth - 리다이렉트 경로:', currentPath);
 
     const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
     const oauthUrl = `${apiBaseUrl}${OAUTH_ENDPOINTS.GOOGLE}?redirect_path=${encodeURIComponent(currentPath)}`;
-    /* eslint-disable no-console */
-    console.log('🚀 useAuth - Google OAuth 리다이렉트:', oauthUrl);
     window.location.href = oauthUrl;
   }, []);
 
@@ -44,33 +61,24 @@ export const useAuth = () => {
   const loginWithDiscord = useCallback(() => {
     // 프록시 환경을 고려하여 /editor로 고정
     const currentPath = '/editor';
-    console.log('🔗 useAuth - 리다이렉트 경로:', currentPath);
 
     const apiBaseUrl = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:8080';
     const oauthUrl = `${apiBaseUrl}${OAUTH_ENDPOINTS.DISCORD}?redirect_path=${encodeURIComponent(currentPath)}`;
-    /* eslint-disable no-console */
-    console.log('🚀 useAuth - Discord OAuth 리다이렉트:', oauthUrl);
     window.location.href = oauthUrl;
   }, []);
 
   /**
-   * 이메일 로그인 (실제 API 호출)
+   * 이메일 로그인
    */
   const loginWithEmail = useCallback(
     async (email: string, password: string) => {
       try {
         const result = await emailLogin({ email, password }).unwrap();
-        console.log('✅ useAuth - 이메일 로그인 성공:', result);
-
-        // 토큰 저장
-        if (result.access_token) {
+        if (result.status === 'success') {
           $authToken.set(result.access_token);
-          console.log('✅ useAuth - 토큰 저장 완료');
         }
-
         return result;
       } catch (error) {
-        console.error('❌ useAuth - 이메일 로그인 실패:', error);
         throw error;
       }
     },
@@ -78,30 +86,65 @@ export const useAuth = () => {
   );
 
   /**
-   * 로그아웃 처리
+   * 로그아웃
    */
   const handleLogout = useCallback(async () => {
-    console.log('🚪 useAuth - 로그아웃 시작');
     try {
       // 서버에 로그아웃 요청
       await logout().unwrap();
-      console.log('✅ useAuth - 서버 로그아웃 성공');
-    } catch (error) {
-      console.error('❌ useAuth - 서버 로그아웃 실패:', error);
-    } finally {
+
       // 로컬 토큰 제거
       $authToken.set(undefined);
-      console.log('✅ useAuth - 로컬 토큰 제거 완료');
 
       // Queue ID 초기화
       resetQueueId();
-      console.log('✅ useAuth - Queue ID 초기화 완료');
 
       // Redux 상태 초기화
       dispatch(clearUser());
-      console.log('✅ useAuth - Redux 상태 초기화 완료');
 
-      // 페이지 새로고침으로 상태 초기화
+      // Canvas 상태 초기화
+      dispatch(allEntitiesDeleted());
+
+      // Prompt 및 모델 상태 초기화
+      dispatch(paramsReset());
+      dispatch(modelChanged({ model: null }));
+      dispatch(vaeSelected(null));
+      dispatch(fluxVAESelected(null));
+      dispatch(refinerModelChanged(null));
+
+      // Gallery 상태 초기화
+      dispatch(imageSelected(null));
+      dispatch(boardIdSelected({ boardId: 'none' }));
+      dispatch(galleryViewChanged('images'));
+      dispatch(imageToCompareChanged(null));
+      dispatch(searchTermChanged(''));
+      dispatch(boardSearchTextChanged(''));
+
+      // Queue 상태 초기화
+      dispatch(listParamsReset());
+
+      // Canvas Session 상태 초기화
+      dispatch(generateSessionReset());
+      dispatch(canvasSessionReset());
+
+      // UI 상태 초기화
+      dispatch(setActiveTab('generate'));
+      dispatch(accordionStateChanged({ id: 'default', isOpen: false }));
+      dispatch(expanderStateChanged({ id: 'default', isOpen: false }));
+
+      // API 상태 리셋
+      dispatch(api.util.resetApiState());
+
+      // 페이지 새로고침
+      window.location.reload();
+    } catch (error) {
+      // 로그아웃 실패 시에도 로컬 상태는 정리
+      $authToken.set(undefined);
+      resetQueueId();
+      dispatch(clearUser());
+      dispatch(allEntitiesDeleted());
+      dispatch(paramsReset());
+      dispatch(api.util.resetApiState());
       window.location.reload();
     }
   }, [logout, dispatch]);
