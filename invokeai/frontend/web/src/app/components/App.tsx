@@ -17,9 +17,11 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { api } from 'services/api';
 import { useRefreshTokenMutation } from 'services/api/custom/sessionApi';
 import { useGetUserInfoQuery } from 'services/api/custom/userApi';
+import { modelsApi } from 'services/api/endpoints/models';
 
 import AppErrorBoundaryFallback from './AppErrorBoundaryFallback';
 import ThemeLocaleProvider from './ThemeLocaleProvider';
+
 const DEFAULT_CONFIG = {};
 
 interface Props {
@@ -42,8 +44,6 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
   // 최초 마운트 시 refresh token으로 access token 발급
   useEffect(() => {
     if (!authToken) {
-      /* eslint-disable no-console */
-      console.log('🔄 App - 토큰 없음, refresh token으로 액세스 토큰 발급 시작');
       refreshToken()
         .unwrap()
         .then((result) => {
@@ -78,16 +78,28 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
           'Board',
         ])
       );
+
+      // 🆕 ModelManager에서 사용하는 것과 동일한 모델 관련 API들을 모두 호출
+      console.log('🔄 App - ModelManager와 동일한 모델 셋팅 시작');
+
+      // 1. 메인 모델 목록 (modelsLoaded 리스너 실행)
+      dispatch(modelsApi.endpoints.getModelConfigs.initiate(undefined));
+
+      // 2. 추가 모델 관련 API들 (ModelManager에서 사용하는 것과 동일)
+      // - Starter Models
+      dispatch(modelsApi.endpoints.getStarterModels.initiate(undefined));
+
+      // - Model Installs
+      dispatch(modelsApi.endpoints.listModelInstalls.initiate(undefined));
+
+      // - HF Token Status
+      dispatch(modelsApi.endpoints.getHFTokenStatus.initiate(undefined));
     }
   }, [authToken, dispatch]);
 
   // 사용자 정보를 Redux에 설정
   useEffect(() => {
     if (userInfo) {
-      if (import.meta.env.MODE === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('유저데이터성공', userInfo);
-      }
       // UserInfoResponse를 User 타입으로 변환
       const user: User = {
         id: userInfo.id,
@@ -112,7 +124,6 @@ const App = ({ config = DEFAULT_CONFIG, studioInitAction }: Props) => {
       setUserQueueId(userInfo.id);
 
       // Queue API 재호출 (사용자별 Queue로 변경되었으므로)
-      console.log('🔄 App - 사용자 정보 로드 후 Queue API 재호출');
       dispatch(api.util.invalidateTags(['SessionQueueStatus', 'CurrentSessionQueueItem', 'NextSessionQueueItem']));
     }
   }, [userInfo, dispatch]);

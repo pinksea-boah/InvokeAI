@@ -13,38 +13,17 @@ const createSessionBaseQuery = () => {
     import.meta.env.VITE_API_SERVER_URL ||
     (import.meta.env.VITE_MODE === 'development' ? 'http://localhost:8080' : 'https://pinksea.ai');
 
-  console.log('🔧 sessionApi - baseQuery 생성:', {
-    apiServerUrl,
-    viteMode: import.meta.env.VITE_MODE,
-    viteApiServerUrl: import.meta.env.VITE_API_SERVER_URL,
-  });
-
   return fetchBaseQuery({
     baseUrl: apiServerUrl,
     credentials: 'include', // HTTP-only 쿠키 포함
     prepareHeaders: (headers) => {
       const token = $authToken.get();
-      const currentApiServerUrl = $apiServerUrl.get() || apiServerUrl;
-
-      /* eslint-disable no-console */
-      console.log('🔐 sessionApi - prepareHeaders 호출:', {
-        hasToken: !!token,
-        tokenPreview: token ? `${token.substring(0, 20)}...` : null,
-        apiServerUrl: currentApiServerUrl,
-      });
+      const currentApiServerUrl = $apiServerUrl.get() || apiServerUrl; // Fallback to directly read env if nanostore is not yet set
 
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
-        console.log('✅ sessionApi - Authorization 헤더 설정 완료');
-      } else {
-        console.log('⚠️ sessionApi - 토큰이 없어서 Authorization 헤더 미설정');
       }
       headers.set('Content-Type', 'application/json');
-
-      console.log('📋 sessionApi - 최종 헤더:', {
-        authorization: headers.get('Authorization'),
-        contentType: headers.get('Content-Type'),
-      });
 
       return headers;
     },

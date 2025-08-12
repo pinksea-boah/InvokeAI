@@ -10,11 +10,6 @@ export const LoginModal = () => {
     // VITE_MODE 환경 변수 사용
     const isDevelopment = import.meta.env.VITE_MODE === 'development';
 
-    console.log('🔍 LoginModal - 환경 확인:', {
-      viteMode: import.meta.env.VITE_MODE,
-      isDevelopment,
-    });
-
     if (isDevelopment) {
       return 'http://localhost:3000/login';
     } else {
