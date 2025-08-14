@@ -38,6 +38,7 @@ import {
   showPromptPreviewsChanged,
 } from 'features/stylePresets/store/stylePresetSlice';
 import { workflowLibrarySearchTermChanged } from 'features/nodes/store/workflowLibrarySlice';
+import { refImagesReset } from 'features/controlLayers/store/refImagesSlice';
 
 // OAuth 엔드포인트 상수 (API 통신이 아닌 리다이렉트용)
 const OAUTH_ENDPOINTS = {
@@ -153,6 +154,9 @@ export const useAuth = () => {
     // Workflow Library 상태 초기화
     dispatch(workflowLibrarySearchTermChanged(''));
 
+    // Reference Image 상태 초기화
+    dispatch(refImagesReset());
+
     // API 상태 리셋
     dispatch(api.util.resetApiState());
   }, [dispatch]);
@@ -171,21 +175,21 @@ export const useAuth = () => {
       // Queue ID 초기화
       resetQueueId();
 
-      // IndexedDB와 localStorage 완전 정리
-      clearStorage();
-
-      // 모든 Redux 상태 완전 리셋
+      // 모든 Redux 상태 완전 리셋 (먼저 실행)
       resetAllReduxStates();
+
+      // IndexedDB와 localStorage 완전 정리 (나중에 실행)
+      clearStorage();
     } catch (error) {
       // 로그아웃 실패 시에도 로컬 상태는 정리
       $authToken.set(undefined);
       resetQueueId();
 
-      // IndexedDB와 localStorage 완전 정리
-      clearStorage();
-
-      // 모든 Redux 상태 완전 리셋
+      // 모든 Redux 상태 완전 리셋 (먼저 실행)
       resetAllReduxStates();
+
+      // IndexedDB와 localStorage 완전 정리 (나중에 실행)
+      clearStorage();
     }
   }, [logout, dispatch, clearStorage, resetAllReduxStates]);
 

@@ -145,15 +145,19 @@ export const RefImagePreview = memo(() => {
         cursor="pointer"
         overflow="hidden"
       >
-        <AuthImage
-          src={imageDTO?.thumbnail_url}
-          objectFit="contain"
-          aspectRatio="1/1"
-          height={imageDTO?.height}
-          authFallback={<Skeleton h="full" aspectRatio="1/1" />}
-          maxW="full"
-          maxH="full"
-        />
+        {imageDTO?.thumbnail_url ? (
+          <AuthImage
+            src={imageDTO.thumbnail_url}
+            objectFit="contain"
+            aspectRatio="1/1"
+            height={imageDTO.height}
+            authFallback={<Skeleton h="full" aspectRatio="1/1" />}
+            maxW="full"
+            maxH="full"
+          />
+        ) : (
+          <Skeleton h="full" aspectRatio="1/1" />
+        )}
         {isIPAdapterConfig(entity.config) && (
           <Flex
             position="absolute"

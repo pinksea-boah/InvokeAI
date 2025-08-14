@@ -1,15 +1,15 @@
 /**
  * 인증 이미지 유틸리티 사용 예시:
- * 
+ *
  * // 1. data URL 방식으로 이미지 로드 (권장)
  * const dataUrl = await loadAuthImageAsDataUrl('/api/v1/images/123');
- * 
+ *
  * // 2. HTMLImageElement로 직접 로드
  * const imageElement = await loadAuthImage('/api/v1/images/123');
- * 
+ *
  * // 3. 데이터 URL로 변환
  * const dataUrl = await imageUrlToDataUrl('/api/v1/images/123');
- * 
+ *
  * // 4. 인증 필요 여부 확인
  * const needsAuth = isAuthRequiredImageUrl('/api/v1/images/123');
  */
@@ -22,15 +22,15 @@ import { $authToken } from 'app/store/nanostores/authToken';
  * @returns 인증이 필요한지 여부
  */
 export const isAuthRequiredImageUrl = (url: string): boolean => {
+  // url이 undefined나 null인 경우 방어
+  if (!url || typeof url !== 'string') {
+    return false;
+  }
+
   // API 엔드포인트 패턴 확인
-  const authRequiredPatterns = [
-    '/invokeai/api/v1/images/',
-    '/api/v1/images/',
-    '/images/i/',
-    '/thumbnail'
-  ];
-  
-  return authRequiredPatterns.some(pattern => url.includes(pattern));
+  const authRequiredPatterns = ['/invokeai/api/v1/images/', '/api/v1/images/', '/images/i/', '/thumbnail'];
+
+  return authRequiredPatterns.some((pattern) => url.includes(pattern));
 };
 
 /**
@@ -40,7 +40,7 @@ export const isAuthRequiredImageUrl = (url: string): boolean => {
  */
 export const loadAuthImageAsDataUrl = async (url: string): Promise<string> => {
   const authToken = $authToken.get();
-  
+
   // 인증이 필요하지 않은 경우 원본 URL 반환
   if (!authToken || !isAuthRequiredImageUrl(url)) {
     return url;
@@ -50,8 +50,8 @@ export const loadAuthImageAsDataUrl = async (url: string): Promise<string> => {
     const response = await fetch(url, {
       credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authToken}`
-      }
+        Authorization: `Bearer ${authToken}`,
+      },
     });
 
     if (!response.ok) {
@@ -59,7 +59,7 @@ export const loadAuthImageAsDataUrl = async (url: string): Promise<string> => {
     }
 
     const blob = await response.blob();
-    
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
@@ -79,7 +79,7 @@ export const loadAuthImageAsDataUrl = async (url: string): Promise<string> => {
  */
 export const loadAuthImage = async (url: string): Promise<HTMLImageElement> => {
   const authToken = $authToken.get();
-  
+
   if (!authToken || !isAuthRequiredImageUrl(url)) {
     // 인증이 필요하지 않은 경우 일반적인 방식으로 로드
     return new Promise((resolve, reject) => {
@@ -109,7 +109,7 @@ export const loadAuthImage = async (url: string): Promise<HTMLImageElement> => {
  */
 export const imageUrlToDataUrl = async (url: string): Promise<string> => {
   const authToken = $authToken.get();
-  
+
   if (!authToken || !isAuthRequiredImageUrl(url)) {
     // 인증이 필요하지 않은 경우 일반적인 방식으로 로드
     const response = await fetch(url);
@@ -126,8 +126,8 @@ export const imageUrlToDataUrl = async (url: string): Promise<string> => {
   const response = await fetch(url, {
     credentials: 'include',
     headers: {
-      'Authorization': `Bearer ${authToken}`
-    }
+      Authorization: `Bearer ${authToken}`,
+    },
   });
 
   if (!response.ok) {
@@ -141,4 +141,4 @@ export const imageUrlToDataUrl = async (url: string): Promise<string> => {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
-}; 
+};

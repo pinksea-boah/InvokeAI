@@ -484,7 +484,12 @@ export function getImageDataTransparency(imageData: ImageData): Transparency {
  */
 export async function loadImage(src: string, fetchUrlFirst?: boolean): Promise<HTMLImageElement> {
   const authToken = $authToken.get();
-  
+
+  // src가 undefined나 빈 문자열인 경우 처리
+  if (!src || typeof src !== 'string') {
+    throw new Error('loadImage: src는 유효한 문자열이어야 합니다');
+  }
+
   // 인증이 필요한 URL인 경우 loadAuthImageAsDataUrl 사용
   if (authToken && isAuthRequiredImageUrl(src)) {
     try {
@@ -508,11 +513,11 @@ export async function loadImage(src: string, fetchUrlFirst?: boolean): Promise<H
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
     const fullUrl = src.startsWith('http') ? src : `${apiBaseUrl}/${src}`;
     try {
-      const response = await fetch(`${fullUrl}?url_only=true`, { 
+      const response = await fetch(`${fullUrl}?url_only=true`, {
         credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
+          Authorization: `Bearer ${authToken}`,
+        },
       });
       const data = await response.json();
       url = data.url;
