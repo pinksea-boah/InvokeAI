@@ -485,6 +485,11 @@ export function getImageDataTransparency(imageData: ImageData): Transparency {
 export async function loadImage(src: string, fetchUrlFirst?: boolean): Promise<HTMLImageElement> {
   const authToken = $authToken.get();
 
+  // src가 undefined나 빈 문자열인 경우 처리
+  if (!src || typeof src !== 'string') {
+    throw new Error('loadImage: src는 유효한 문자열이어야 합니다');
+  }
+
   // 인증이 필요한 URL인 경우 loadAuthImageAsDataUrl 사용
   if (authToken && isAuthRequiredImageUrl(src)) {
     try {

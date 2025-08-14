@@ -263,6 +263,7 @@ export const {
   refImageFLUXReduxImageInfluenceChanged,
   refImageIsEnabledToggled,
   refImagesRecalled,
+  refImagesReset,
 } = refImagesSlice.actions;
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
