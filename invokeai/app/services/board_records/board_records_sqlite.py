@@ -52,7 +52,7 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                 )
             except sqlite3.Error as e:
                 raise BoardRecordSaveException from e
-        return self.get(board_id)
+        return self.get(board_id, user_id)
 
     def get(
         self,
