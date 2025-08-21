@@ -71,10 +71,11 @@ async def get_board(
 async def update_board(
     board_id: str = Path(description="The id of board to update"),
     changes: BoardChanges = Body(description="The changes to apply to the board"),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> BoardDTO:
     """Updates a board"""
     try:
-        result = ApiDependencies.invoker.services.boards.update(board_id=board_id, changes=changes)
+        result = ApiDependencies.invoker.services.boards.update(board_id=board_id, changes=changes, user_id=user_id)
         return result
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to update board")
@@ -84,6 +85,7 @@ async def update_board(
 async def delete_board(
     board_id: str = Path(description="The id of board to delete"),
     include_images: Optional[bool] = Query(description="Permanently delete all images on the board", default=False),
+    user_id: Optional[str] = Query(default=None, description="The user ID for multi-user SaaS support."),
 ) -> DeleteBoardResult:
     """Deletes a board"""
     try:
@@ -94,7 +96,7 @@ async def delete_board(
                 is_intermediate=None,
             )
             ApiDependencies.invoker.services.images.delete_images_on_board(board_id=board_id)
-            ApiDependencies.invoker.services.boards.delete(board_id=board_id)
+            ApiDependencies.invoker.services.boards.delete(board_id=board_id, user_id=user_id)
             return DeleteBoardResult(
                 board_id=board_id,
                 deleted_board_images=[],
@@ -106,7 +108,7 @@ async def delete_board(
                 categories=None,
                 is_intermediate=None,
             )
-            ApiDependencies.invoker.services.boards.delete(board_id=board_id)
+            ApiDependencies.invoker.services.boards.delete(board_id=board_id, user_id=user_id)
             return DeleteBoardResult(
                 board_id=board_id,
                 deleted_board_images=deleted_board_images,

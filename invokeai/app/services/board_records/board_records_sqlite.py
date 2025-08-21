@@ -28,7 +28,7 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                 cursor.execute(
                     """--sql
                     DELETE FROM boards
-                    WHERE board_id = ? AND user_id = ?;
+                    WHERE board_id = ? AND user_id IS ?;
                     """,
                     (board_id, user_id),
                 )
@@ -65,7 +65,7 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                     """--sql
                     SELECT *
                     FROM boards
-                    WHERE board_id = ? AND user_id = ?;
+                    WHERE board_id = ? AND user_id IS ?;
                     """,
                     (board_id, user_id),
                 )
@@ -91,7 +91,7 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                         """--sql
                         UPDATE boards
                         SET board_name = ?
-                        WHERE board_id = ? AND user_id = ?;
+                        WHERE board_id = ? AND user_id IS ?;
                         """,
                         (changes.board_name, board_id, user_id),
                     )
@@ -102,7 +102,7 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                         """--sql
                         UPDATE boards
                         SET cover_image_name = ?
-                        WHERE board_id = ? AND user_id = ?;
+                        WHERE board_id = ? AND user_id IS ?;
                         """,
                         (changes.cover_image_name, board_id, user_id),
                     )
@@ -113,14 +113,14 @@ class SqliteBoardRecordStorage(BoardRecordStorageBase):
                         """--sql
                         UPDATE boards
                         SET archived = ?
-                        WHERE board_id = ? AND user_id = ?;
+                        WHERE board_id = ? AND user_id IS ?;
                         """,
                         (changes.archived, board_id, user_id),
                     )
 
             except sqlite3.Error as e:
                 raise BoardRecordSaveException from e
-        return self.get(board_id)
+        return self.get(board_id, user_id)
 
     def get_many(
         self,
